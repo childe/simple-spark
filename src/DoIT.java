@@ -1,6 +1,11 @@
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+
+import com.esotericsoftware.yamlbeans.YamlException;
+import com.esotericsoftware.yamlbeans.YamlReader;
 
 import scala.Tuple2;
 import transformation.Date;
@@ -21,12 +26,27 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 
 public class DoIT {
-	@SuppressWarnings("serial")
+	@SuppressWarnings({ "serial", "unchecked" })
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
 		// prepare configuration
+		YamlReader reader = null;
+		HashMap<String, Object> topologyConf = null;
+		try {
+			reader = new YamlReader(new FileReader(args[0]));
+		} catch (FileNotFoundException e) {
+			System.exit(1);
+		}
+		try {
+			topologyConf = (HashMap<String, Object>) reader.read();
+		} catch (YamlException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+		}
 
+		
 		String appName = "mobile";
 		String zkQuorum = "10.8.84.74:2181";
 		String group = "spark-opsdev-test-liujia-201505062044";
