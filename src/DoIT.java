@@ -1,8 +1,10 @@
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
@@ -26,7 +28,45 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 
 public class DoIT {
-	@SuppressWarnings({ "serial", "unchecked" })
+	@SuppressWarnings({ "unchecked" })
+	public static void parseInputs(HashMap<String, Object> streams,
+			JavaStreamingContext jssc, HashMap<String, Object> inputs) {
+
+		Iterator<Entry<String, Object>> inputsIT = inputs.entrySet().iterator();
+		while (inputsIT.hasNext()) {
+			Map.Entry<String, Object> input = inputsIT.next();
+			String inputType = (String) input.getKey();
+
+			if (inputType.equalsIgnoreCase("kafka")) {
+				HashMap<String, Object> inputsWithCertainType = (HashMap<String, Object>) input
+						.getValue();
+
+				Iterator<Entry<String, Object>> inputsWithCertainTypeIT = inputsWithCertainType
+						.entrySet().iterator();
+				while (inputsWithCertainTypeIT.hasNext()) {
+					Map.Entry<String, Object> oneInputWithCertainTypeEntry = inputsWithCertainTypeIT
+							.next();
+
+					String streamID = (String) oneInputWithCertainTypeEntry
+							.getKey();
+
+					// kafaf streaming
+					HashMap<String, Object> oneInputConfigWithCertainType = (HashMap<String, Object>) oneInputWithCertainTypeEntry
+							.getValue();
+					Map<String, Integer> topicsMap = (HashMap<String, Integer>) oneInputConfigWithCertainType
+							.get("topics");
+					String zkQuorum = (String) oneInputConfigWithCertainType
+							.get("zookeeper");
+					String group = (String) oneInputConfigWithCertainType
+							.get("groupID");
+					streams.put(streamID, KafkaUtils.createStream(jssc,
+							zkQuorum, group, topicsMap));
+				}
+			}
+		}
+
+	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
@@ -46,26 +86,29 @@ public class DoIT {
 			System.exit(1);
 		}
 
-		
-		String appName = "mobile";
-		String zkQuorum = "10.8.84.74:2181";
-		String group = "spark-opsdev-test-liujia-201505062044";
 
-		// StreamingExamples.setStreamingLogLevels();
+		String appName = (String) topologyConf.get("appname");
 		SparkConf sparkConf = new SparkConf().setAppName(appName);
-		sparkConf.set("spark.ui.port", "8100");
+		sparkConf.set("spark.ui.port",
+				(String) topologyConf.get("spark.ui.port"));
 
-		int batchDuration = 10;
+		int batchDuration = (int) topologyConf.get("batching_interval");
+
+		// build streams
+
+		HashMap<String, Object> streams = new HashMap<String, Object>();
+
+		// input
+
+		HashMap<String, Object> inputsConfig = new HashMap<String, Object>();
+
 		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
 				Durations.seconds(batchDuration));
 
+		parseInputs(streams, jssc, inputsConfig);
+
 		// kafaf streaming
-
-		Map<String, Integer> traceMap = new HashMap<String, Integer>();
-		traceMap.put("logstash-logginggw-mobile-tracelog", 5);
-
-		JavaPairReceiverInputDStream<String, String> trace = KafkaUtils
-				.createStream(jssc, zkQuorum, group, traceMap);
+		JavaPairReceiverInputDStream<String, String> trace = (JavaPairReceiverInputDStream<String, String>)streams.get("mobile");
 
 		JavaDStream<HashMap<String, Object>> traceRaw = trace
 				.map(new Function<Tuple2<String, String>, HashMap<String, Object>>() {
@@ -82,7 +125,7 @@ public class DoIT {
 				});
 
 		traceRaw.print();
-		
+
 		HashMap<String, Object> splitconf = new HashMap<String, Object>();
 		splitconf.put("delimiter", "\\t");
 		splitconf.put("src", "message");
@@ -92,11 +135,11 @@ public class DoIT {
 		fields.put("StartTime", 6);
 		fields.put("Interval", 7);
 		fields.put("ServiceStatus", 8);
-		
+
 		splitconf.put("fields", fields);
 		JavaDStream<HashMap<String, Object>> splited = traceRaw.map(new Split(
 				splitconf));
-		
+
 		splited.print();
 
 		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
