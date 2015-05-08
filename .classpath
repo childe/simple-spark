@@ -20,5 +20,6 @@
 	<classpathentry kind="lib" path="/Users/liujia/Projects/ctrip/spark/spark-java/vender/juel-api-2.2.6.jar"/>
 	<classpathentry kind="lib" path="/Users/liujia/Projects/ctrip/spark/spark-java/vender/juel-impl-2.2.7.jar"/>
 	<classpathentry kind="lib" path="/Users/liujia/Projects/ctrip/spark/spark-java/vender/juel-spi-2.2.7.jar"/>
+	<classpathentry kind="lib" path="/Users/liujia/Projects/ctrip/spark/spark-java/vender/yamlbeans-1.06.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
