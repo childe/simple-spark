@@ -32,12 +32,13 @@ public class Date implements Function {
 		}
 
 		String stringDate = (String) event.get(src);
+		String target = (String) this.conf.get("target");
 		String stringFormat = (String) (this.conf.get("format"));
 		SimpleDateFormat sdf = new SimpleDateFormat(stringFormat);
 		java.util.Date date;
 		try {
 			date = sdf.parse(stringDate);
-			event.put("@timestamp", date.getTime());
+			event.put(target, date.getTime());
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			// e.printStackTrace();

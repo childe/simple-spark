@@ -20,7 +20,6 @@ import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 
-
 public class DoIT {
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {
@@ -62,26 +61,30 @@ public class DoIT {
 					}
 				});
 
+		traceRaw.print();
+		
 		HashMap<String, Object> splitconf = new HashMap<String, Object>();
-		splitconf.put("delimiter", "\t");
+		splitconf.put("delimiter", "\\t");
+		splitconf.put("src", "message");
 		HashMap<String, Integer> fields = new HashMap<String, Integer>();
 		fields.put("ServerIP", 1);
 		fields.put("ServiceCode", 4);
 		fields.put("StartTime", 6);
 		fields.put("Interval", 7);
 		fields.put("ServiceStatus", 8);
+		
 		splitconf.put("fields", fields);
 		JavaDStream<HashMap<String, Object>> splited = traceRaw.map(new Split(
 				splitconf));
+		
+		splited.print();
 
 		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
 		traceDateConf.put("src", "StartTime");
+		traceDateConf.put("target", "@timestamp");
 		traceDateConf.put("format", "yyyy-MM-dd HH:mm:ss.SSS");
 		JavaDStream<HashMap<String, Object>> traceDate = splited.map(new Date(
 				traceDateConf));
-		
-//		trace.print();
-		splited.print();
 
 		JavaPairDStream<ArrayList<String>, HashMap<String, Object>> traceSetIntervalKey = traceDate
 				.mapToPair(new PairFunction<HashMap<String, Object>, ArrayList<String>, HashMap<String, Object>>() {

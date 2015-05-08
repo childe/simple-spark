@@ -26,7 +26,6 @@ public class Split implements Function {
 		// TODO Auto-generated method stub
 		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
 
-		System.out.println(this.conf);
 		if (event == null) {
 			return event;
 		}
@@ -40,7 +39,6 @@ public class Split implements Function {
 		String delimiter = (String) this.conf.get("delimiter");
 
 		String[] splited = ((String) event.get(src)).split(delimiter);
-		System.out.println(splited);
 
 		@SuppressWarnings("unchecked")
 		HashMap<String, Integer> fields = (HashMap<String, Integer>) this.conf
@@ -60,8 +58,7 @@ public class Split implements Function {
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			e.printStackTrace();
+			// e.printStackTrace();
 			return event;
 		}
 
@@ -73,6 +70,10 @@ public class Split implements Function {
 	public static void main(String[] args) {
 		String[] a = "True|1".split("\\|");
 		System.out.println(a[0]);
-
+		
+		
+		String message = "2015-05-07T11:15:58.326	|604.001|3202";
+		a = message.split("[\t|]");
+		System.out.println(a.length);
 	}
 }
