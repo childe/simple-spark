@@ -8,10 +8,16 @@ import java.util.Map.Entry;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
+import com.hubspot.jinjava.Jinjava;
+import com.hubspot.jinjava.interpret.JinjavaInterpreter;
+import com.hubspot.jinjava.tree.Node;
 
 import scala.Tuple2;
 import transformation.Date;
 import transformation.Split;
+import utils.FirstProcess;
+import utils.firstProcess.Json;
+import utils.firstProcess.Plain;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -59,6 +65,23 @@ public class DoIT {
 							.get("zookeeper");
 					String group = (String) oneInputConfigWithCertainType
 							.get("groupID");
+					
+					// put message to event
+					String codec = "json";
+					if (oneInputConfigWithCertainType.containsKey("codec")){
+						codec = (String) oneInputConfigWithCertainType.get("codec");
+					}
+					
+					JavaPairReceiverInputDStream<String, String> a = KafkaUtils.createStream(jssc,
+							zkQuorum, group, topicsMap);
+					
+					if (codec.equalsIgnoreCase("json")){
+						a.map(new Json());
+					}
+					else if (codec.equalsIgnoreCase("json")){
+						a.map(new Plain());
+					}
+					
 					streams.put(streamID, KafkaUtils.createStream(jssc,
 							zkQuorum, group, topicsMap));
 				}
@@ -124,7 +147,6 @@ public class DoIT {
 					}
 				});
 
-		traceRaw.print();
 
 		HashMap<String, Object> splitconf = new HashMap<String, Object>();
 		splitconf.put("delimiter", "\\t");
@@ -140,7 +162,6 @@ public class DoIT {
 		JavaDStream<HashMap<String, Object>> splited = traceRaw.map(new Split(
 				splitconf));
 
-		splited.print();
 
 		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
 		traceDateConf.put("src", "StartTime");
