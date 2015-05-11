@@ -64,23 +64,23 @@ public class DoIT {
 							.get("zookeeper");
 					String group = (String) oneInputConfigWithCertainType
 							.get("groupID");
-					
+
 					// put message to event
 					String codec = "json";
-					if (oneInputConfigWithCertainType.containsKey("codec")){
-						codec = (String) oneInputConfigWithCertainType.get("codec");
+					if (oneInputConfigWithCertainType.containsKey("codec")) {
+						codec = (String) oneInputConfigWithCertainType
+								.get("codec");
 					}
-					
-					JavaPairReceiverInputDStream<String, String> a = KafkaUtils.createStream(jssc,
-							zkQuorum, group, topicsMap);
-					
-					if (codec.equalsIgnoreCase("json")){
+
+					JavaPairReceiverInputDStream<String, String> a = KafkaUtils
+							.createStream(jssc, zkQuorum, group, topicsMap);
+
+					if (codec.equalsIgnoreCase("json")) {
 						a.map(new Json());
-					}
-					else if (codec.equalsIgnoreCase("json")){
+					} else if (codec.equalsIgnoreCase("json")) {
 						a.map(new Plain());
 					}
-					
+
 					streams.put(streamID, KafkaUtils.createStream(jssc,
 							zkQuorum, group, topicsMap));
 				}
@@ -98,6 +98,7 @@ public class DoIT {
 		try {
 			reader = new YamlReader(new FileReader(args[0]));
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 			System.exit(1);
 		}
 		try {
@@ -107,12 +108,18 @@ public class DoIT {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		System.out.println(topologyConf);
 
-
-		String appName = (String) topologyConf.get("appname");
+		String appName = (String) topologyConf.get("app_name");
 		SparkConf sparkConf = new SparkConf().setAppName(appName);
-		sparkConf.set("spark.ui.port",
-				(String) topologyConf.get("spark.ui.port"));
+
+		HashMap<String, Object> spark_conf = (HashMap<String, Object>) topologyConf
+				.get("spark_conf");
+		Iterator<Entry<String, Object>> it = spark_conf.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, Object> entry = it.next();
+			sparkConf.set(entry.getKey(), (String) entry.getValue());
+		}
 
 		int batchDuration = (int) topologyConf.get("batching_interval");
 
@@ -130,7 +137,8 @@ public class DoIT {
 		parseInputs(streams, jssc, inputsConfig);
 
 		// kafaf streaming
-		JavaPairReceiverInputDStream<String, String> trace = (JavaPairReceiverInputDStream<String, String>)streams.get("mobile");
+		JavaPairReceiverInputDStream<String, String> trace = (JavaPairReceiverInputDStream<String, String>) streams
+				.get("mobile");
 
 		JavaDStream<HashMap<String, Object>> traceRaw = trace
 				.map(new Function<Tuple2<String, String>, HashMap<String, Object>>() {
@@ -146,7 +154,6 @@ public class DoIT {
 					}
 				});
 
-
 		HashMap<String, Object> splitconf = new HashMap<String, Object>();
 		splitconf.put("delimiter", "\\t");
 		splitconf.put("src", "message");
@@ -160,7 +167,6 @@ public class DoIT {
 		splitconf.put("fields", fields);
 		JavaDStream<HashMap<String, Object>> splited = traceRaw.map(new Split(
 				splitconf));
-
 
 		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
 		traceDateConf.put("src", "StartTime");
