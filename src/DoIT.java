@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -6,31 +8,22 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import com.esotericsoftware.yamlbeans.YamlException;
-import com.esotericsoftware.yamlbeans.YamlReader;
-import com.hubspot.jinjava.Jinjava;
-import com.hubspot.jinjava.interpret.JinjavaInterpreter;
-import com.hubspot.jinjava.tree.Node;
-
-import scala.Tuple2;
 import transformation.Date;
 import transformation.Split;
 import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.PairFunction;
+
 //import org.apache.spark.examples.streaming.StreamingExamples;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
+import org.yaml.snakeyaml.Yaml;
+
+import com.twitter.chill.Base64.InputStream;
 
 public class DoIT {
 	@SuppressWarnings({ "unchecked" })
@@ -55,21 +48,20 @@ public class DoIT {
 
 					String streamID = (String) oneInputWithCertainTypeEntry
 							.getKey();
-					System.out.println("1" + streamID);
 
 					// kafaf streaming
 					HashMap<String, Object> oneInputConfigWithCertainType = (HashMap<String, Object>) oneInputWithCertainTypeEntry
 							.getValue();
-					HashMap<String, String> topicsMap = (HashMap<String, String>) oneInputConfigWithCertainType
+					HashMap<String, Integer> topicsMap = (HashMap<String, Integer>) oneInputConfigWithCertainType
 							.get("topics");
 					HashMap<String, Integer> topics = new HashMap<String, Integer>();
-					Iterator<Entry<String, String>> topicIT = topicsMap
-							.entrySet().iterator();
-					while (topicIT.hasNext()) {
-						Map.Entry<String, String> entry = topicIT.next();
-						topics.put(entry.getKey(),
-								Integer.parseInt(entry.getValue()));
-					}
+//					Iterator<Entry<String, String>> topicIT = topicsMap
+//							.entrySet().iterator();
+//					while (topicIT.hasNext()) {
+//						Map.Entry<String, String> entry = topicIT.next();
+//						topics.put(entry.getKey(),
+//								Integer.parseInt(entry.getValue()));
+//					}
 
 					String zkQuorum = (String) oneInputConfigWithCertainType
 							.get("zookeeper");
@@ -84,7 +76,7 @@ public class DoIT {
 					}
 
 					JavaPairReceiverInputDStream<String, String> a = KafkaUtils
-							.createStream(jssc, zkQuorum, group, topics);
+							.createStream(jssc, zkQuorum, group, topicsMap);
 
 					if (codec.equalsIgnoreCase("json")) {
 						streams.put(streamID, a.map(new Json()));
@@ -103,22 +95,17 @@ public class DoIT {
 
 		// prepare configuration
 
-		YamlReader reader = null;
-		HashMap<String, Object> topologyConf = null;
+		Map<String, Object> topologyConf = null;
+		Yaml yaml = new Yaml();
+		FileInputStream input;
 		try {
-			reader = new YamlReader(new FileReader(args[0]));
+			input = new FileInputStream(new File(args[0]));
+			topologyConf = (Map<String, Object>) yaml.load(input);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		try {
-			topologyConf = (HashMap<String, Object>) reader.read();
-		} catch (YamlException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.exit(1);
 		}
+
 		System.out.println(topologyConf);
 
 		// spark conf
@@ -148,12 +135,14 @@ public class DoIT {
 				Durations.seconds(batchDuration));
 
 		parseInputs(streams, jssc, inputsConfig);
-		System.out.println(streams);
+
+		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
+				.get("filter");
 
 		// kafaf streaming
 		JavaDStream<HashMap<String, Object>> trace = (JavaDStream<HashMap<String, Object>>) streams
 				.get("mobile");
-
+		// trace.print();
 
 		HashMap<String, Object> splitconf = new HashMap<String, Object>();
 		splitconf.put("delimiter", "\\t");
@@ -168,6 +157,7 @@ public class DoIT {
 		splitconf.put("fields", fields);
 		JavaDStream<HashMap<String, Object>> splited = trace.map(new Split(
 				splitconf));
+		splited.print();
 
 		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
 		traceDateConf.put("src", "StartTime");
@@ -176,62 +166,43 @@ public class DoIT {
 		JavaDStream<HashMap<String, Object>> traceDate = splited.map(new Date(
 				traceDateConf));
 
-		JavaPairDStream<ArrayList<String>, HashMap<String, Object>> traceSetIntervalKey = traceDate
-				.mapToPair(new PairFunction<HashMap<String, Object>, ArrayList<String>, HashMap<String, Object>>() {
+		traceDate.print();
 
-					@Override
-					public Tuple2<ArrayList<String>, HashMap<String, Object>> call(
-							HashMap<String, Object> arg0) throws Exception {
-						// TODO Auto-generated method stub
-						HashMap<String, Object> event = (HashMap<String, Object>) arg0;
-						ArrayList<String> tuple_1 = new ArrayList<String>();
-						tuple_1.add((String) event.get("ServiceCode"));
-						int interval = Integer.parseInt((String) event
-								.get("Interval"));
-						if (interval < 1000)
-							tuple_1.add("low");
-						else if (interval < 5000)
-							tuple_1.add("latency");
-						else
-							tuple_1.add("latencyHigh");
-
-						if (!event.containsKey("@timestamp"))
-							tuple_1.add("0");
-						else {
-							long timestamp = (long) event.get("@timestamp");
-							tuple_1.add(Long.toString(timestamp - timestamp
-									% 60000));
-						}
-
-						return new Tuple2<ArrayList<String>, HashMap<String, Object>>(
-								tuple_1, event);
-					}
-				});
-
-		traceSetIntervalKey
-				.reduceByKey(
-						new Function2<HashMap<String, Object>, HashMap<String, Object>, HashMap<String, Object>>() {
-							@Override
-							public HashMap<String, Object> call(
-									HashMap<String, Object> a,
-									HashMap<String, Object> b) {
-								HashMap<String, Object> metric = new HashMap<String, Object>();
-								long count = 0;
-								if (a.containsKey("count")) {
-									count = (long) a.get("count");
-								} else {
-									count = 1;
-								}
-
-								if (b.containsKey("count")) {
-									count += (long) b.get("count");
-								} else {
-									count += 1;
-								}
-								metric.put("count", count);
-								return metric;
-							}
-						}).print();
+		/*
+		 * JavaPairDStream<ArrayList<String>, HashMap<String, Object>>
+		 * traceSetIntervalKey = traceDate .mapToPair(new
+		 * PairFunction<HashMap<String, Object>, ArrayList<String>,
+		 * HashMap<String, Object>>() {
+		 * 
+		 * @Override public Tuple2<ArrayList<String>, HashMap<String, Object>>
+		 * call( HashMap<String, Object> arg0) throws Exception { // TODO
+		 * Auto-generated method stub HashMap<String, Object> event =
+		 * (HashMap<String, Object>) arg0; ArrayList<String> tuple_1 = new
+		 * ArrayList<String>(); tuple_1.add((String) event.get("ServiceCode"));
+		 * int interval = Integer.parseInt((String) event .get("Interval")); if
+		 * (interval < 1000) tuple_1.add("low"); else if (interval < 5000)
+		 * tuple_1.add("latency"); else tuple_1.add("latencyHigh");
+		 * 
+		 * if (!event.containsKey("@timestamp")) tuple_1.add("0"); else { long
+		 * timestamp = (long) event.get("@timestamp");
+		 * tuple_1.add(Long.toString(timestamp - timestamp % 60000)); }
+		 * 
+		 * return new Tuple2<ArrayList<String>, HashMap<String, Object>>(
+		 * tuple_1, event); } });
+		 * 
+		 * traceSetIntervalKey .reduceByKey( new Function2<HashMap<String,
+		 * Object>, HashMap<String, Object>, HashMap<String, Object>>() {
+		 * 
+		 * @Override public HashMap<String, Object> call( HashMap<String,
+		 * Object> a, HashMap<String, Object> b) { HashMap<String, Object>
+		 * metric = new HashMap<String, Object>(); long count = 0; if
+		 * (a.containsKey("count")) { count = (long) a.get("count"); } else {
+		 * count = 1; }
+		 * 
+		 * if (b.containsKey("count")) { count += (long) b.get("count"); } else
+		 * { count += 1; } metric.put("count", count); return metric; }
+		 * }).print();
+		 */
 
 		// traceRaw.print();
 		// traceDate.print();
