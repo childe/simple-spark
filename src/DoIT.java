@@ -55,6 +55,7 @@ public class DoIT {
 
 					String streamID = (String) oneInputWithCertainTypeEntry
 							.getKey();
+					System.out.println("1"+streamID);
 
 					// kafaf streaming
 					HashMap<String, Object> oneInputConfigWithCertainType = (HashMap<String, Object>) oneInputWithCertainTypeEntry
@@ -88,7 +89,7 @@ public class DoIT {
 
 					if (codec.equalsIgnoreCase("json")) {				
 						streams.put(streamID, a.map(new Json()));
-					} else if (codec.equalsIgnoreCase("json")) {					
+					} else if (codec.equalsIgnoreCase("plain")) {					
 						streams.put(streamID, a.map(new Plain()));
 					}
 
