@@ -17,7 +17,7 @@ public class Plain implements Function {
 	@Override
 	public Object call(Object arg0) throws Exception {
 		// TODO Auto-generated method stub
-		String message = ((Tuple2<String, String>) arg0)._1();
+		String message = ((Tuple2<String, String>) arg0)._2();
 
 		HashMap<String, Object> event = new HashMap<String, Object>();
 		event.put("message", message);
