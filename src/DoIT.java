@@ -76,13 +76,11 @@ public class DoIT {
 							.createStream(jssc, zkQuorum, group, topicsMap);
 
 					if (codec.equalsIgnoreCase("json")) {
-						a.map(new Json());
+						streams.put(streamID, a.map(new Json()));
 					} else if (codec.equalsIgnoreCase("json")) {
-						a.map(new Plain());
+						streams.put(streamID, a.map(new Plain()));
 					}
 
-					streams.put(streamID, KafkaUtils.createStream(jssc,
-							zkQuorum, group, topicsMap));
 				}
 			}
 		}
@@ -110,6 +108,7 @@ public class DoIT {
 		}
 		System.out.println(topologyConf);
 
+		// spark conf
 		String appName = (String) topologyConf.get("app_name");
 		SparkConf sparkConf = new SparkConf().setAppName(appName);
 
@@ -121,8 +120,6 @@ public class DoIT {
 			sparkConf.set(entry.getKey(), (String) entry.getValue());
 		}
 
-		int batchDuration = (int) topologyConf.get("batching_interval");
-
 		// build streams
 
 		HashMap<String, Object> streams = new HashMap<String, Object>();
@@ -130,7 +127,8 @@ public class DoIT {
 		// input
 
 		HashMap<String, Object> inputsConfig = new HashMap<String, Object>();
-
+		int batchDuration = Integer.parseInt((String) topologyConf
+				.get("batching_interval"));
 		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
 				Durations.seconds(batchDuration));
 
