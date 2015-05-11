@@ -37,6 +37,7 @@ public class DoIT {
 	public static void parseInputs(HashMap<String, Object> streams,
 			JavaStreamingContext jssc, HashMap<String, Object> inputs) {
 
+		System.out.println(inputs);
 		Iterator<Entry<String, Object>> inputsIT = inputs.entrySet().iterator();
 		while (inputsIT.hasNext()) {
 			Map.Entry<String, Object> input = inputsIT.next();
@@ -58,12 +59,22 @@ public class DoIT {
 					// kafaf streaming
 					HashMap<String, Object> oneInputConfigWithCertainType = (HashMap<String, Object>) oneInputWithCertainTypeEntry
 							.getValue();
-					Map<String, Integer> topicsMap = (HashMap<String, Integer>) oneInputConfigWithCertainType
+					HashMap<String, String> topicsMap = (HashMap<String, String>) oneInputConfigWithCertainType
 							.get("topics");
+					HashMap<String, Integer> topics = new HashMap<String, Integer>();
+					Iterator<Entry<String, String>> topicIT = topicsMap
+							.entrySet().iterator();
+					while (topicIT.hasNext()) {
+						Map.Entry<String, String> entry = topicIT.next();
+						topics.put(entry.getKey(),
+								Integer.parseInt(entry.getValue()));
+					}
+
 					String zkQuorum = (String) oneInputConfigWithCertainType
 							.get("zookeeper");
 					String group = (String) oneInputConfigWithCertainType
 							.get("groupID");
+
 
 					// put message to event
 					String codec = "json";
@@ -73,11 +84,11 @@ public class DoIT {
 					}
 
 					JavaPairReceiverInputDStream<String, String> a = KafkaUtils
-							.createStream(jssc, zkQuorum, group, topicsMap);
+							.createStream(jssc, zkQuorum, group, topics);
 
-					if (codec.equalsIgnoreCase("json")) {
+					if (codec.equalsIgnoreCase("json")) {				
 						streams.put(streamID, a.map(new Json()));
-					} else if (codec.equalsIgnoreCase("json")) {
+					} else if (codec.equalsIgnoreCase("json")) {					
 						streams.put(streamID, a.map(new Plain()));
 					}
 
@@ -91,6 +102,7 @@ public class DoIT {
 		// TODO Auto-generated method stub
 
 		// prepare configuration
+
 		YamlReader reader = null;
 		HashMap<String, Object> topologyConf = null;
 		try {
@@ -99,6 +111,7 @@ public class DoIT {
 			e.printStackTrace();
 			System.exit(1);
 		}
+
 		try {
 			topologyConf = (HashMap<String, Object>) reader.read();
 		} catch (YamlException e) {
@@ -109,6 +122,7 @@ public class DoIT {
 		System.out.println(topologyConf);
 
 		// spark conf
+
 		String appName = (String) topologyConf.get("app_name");
 		SparkConf sparkConf = new SparkConf().setAppName(appName);
 
@@ -126,13 +140,15 @@ public class DoIT {
 
 		// input
 
-		HashMap<String, Object> inputsConfig = new HashMap<String, Object>();
+		HashMap<String, Object> inputsConfig = (HashMap<String, Object>) topologyConf
+				.get("input");
 		int batchDuration = Integer.parseInt((String) topologyConf
 				.get("batching_interval"));
 		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
 				Durations.seconds(batchDuration));
 
 		parseInputs(streams, jssc, inputsConfig);
+		System.out.println(streams);
 
 		// kafaf streaming
 		JavaPairReceiverInputDStream<String, String> trace = (JavaPairReceiverInputDStream<String, String>) streams
