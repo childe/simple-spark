@@ -54,14 +54,7 @@ public class DoIT {
 							.getValue();
 					HashMap<String, Integer> topicsMap = (HashMap<String, Integer>) oneInputConfigWithCertainType
 							.get("topics");
-					HashMap<String, Integer> topics = new HashMap<String, Integer>();
-//					Iterator<Entry<String, String>> topicIT = topicsMap
-//							.entrySet().iterator();
-//					while (topicIT.hasNext()) {
-//						Map.Entry<String, String> entry = topicIT.next();
-//						topics.put(entry.getKey(),
-//								Integer.parseInt(entry.getValue()));
-//					}
+
 
 					String zkQuorum = (String) oneInputConfigWithCertainType
 							.get("zookeeper");
