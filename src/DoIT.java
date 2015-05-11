@@ -15,7 +15,6 @@ import com.hubspot.jinjava.tree.Node;
 import scala.Tuple2;
 import transformation.Date;
 import transformation.Split;
-import utils.FirstProcess;
 import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
