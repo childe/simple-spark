@@ -55,7 +55,7 @@ public class DoIT {
 
 					String streamID = (String) oneInputWithCertainTypeEntry
 							.getKey();
-					System.out.println("1"+streamID);
+					System.out.println("1" + streamID);
 
 					// kafaf streaming
 					HashMap<String, Object> oneInputConfigWithCertainType = (HashMap<String, Object>) oneInputWithCertainTypeEntry
@@ -76,7 +76,6 @@ public class DoIT {
 					String group = (String) oneInputConfigWithCertainType
 							.get("groupID");
 
-
 					// put message to event
 					String codec = "json";
 					if (oneInputConfigWithCertainType.containsKey("codec")) {
@@ -87,9 +86,9 @@ public class DoIT {
 					JavaPairReceiverInputDStream<String, String> a = KafkaUtils
 							.createStream(jssc, zkQuorum, group, topics);
 
-					if (codec.equalsIgnoreCase("json")) {				
+					if (codec.equalsIgnoreCase("json")) {
 						streams.put(streamID, a.map(new Json()));
-					} else if (codec.equalsIgnoreCase("plain")) {					
+					} else if (codec.equalsIgnoreCase("plain")) {
 						streams.put(streamID, a.map(new Plain()));
 					}
 
@@ -152,7 +151,7 @@ public class DoIT {
 		System.out.println(streams);
 
 		// kafaf streaming
-		JavaPairReceiverInputDStream<String, String> trace = (JavaPairReceiverInputDStream<String, String>) streams
+		JavaDStream<HashMap<String, Object>> trace = (JavaDStream<HashMap<String, Object>>) streams
 				.get("mobile");
 
 		JavaDStream<HashMap<String, Object>> traceRaw = trace
