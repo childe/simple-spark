@@ -154,19 +154,6 @@ public class DoIT {
 		JavaDStream<HashMap<String, Object>> trace = (JavaDStream<HashMap<String, Object>>) streams
 				.get("mobile");
 
-		JavaDStream<HashMap<String, Object>> traceRaw = trace
-				.map(new Function<Tuple2<String, String>, HashMap<String, Object>>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public HashMap<String, Object> call(
-							Tuple2<String, String> tuple2) {
-						String message = tuple2._2();
-						HashMap<String, Object> event = new HashMap<String, Object>();
-						event.put("message", message);
-
-						return event;
-					}
-				});
 
 		HashMap<String, Object> splitconf = new HashMap<String, Object>();
 		splitconf.put("delimiter", "\\t");
@@ -179,7 +166,7 @@ public class DoIT {
 		fields.put("ServiceStatus", 8);
 
 		splitconf.put("fields", fields);
-		JavaDStream<HashMap<String, Object>> splited = traceRaw.map(new Split(
+		JavaDStream<HashMap<String, Object>> splited = trace.map(new Split(
 				splitconf));
 
 		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
