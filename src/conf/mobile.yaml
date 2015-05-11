@@ -1,0 +1,79 @@
+master: "spark://10.8.84.130:7077"
+app_name: mobile
+spark_conf:
+    spark.cores.max: 30
+    spark.executor.memory: 3g
+    spark.ui.port: 8100
+batching_interval: 5
+input:
+  kafka:
+    mobile:
+      zookeeper: 10.8.84.74:2181
+      groupID: spark-opsdev-test-liujia-201505052253
+      codec: plain
+      topics:
+        logstash-logginggw-mobile-tracelog: 5
+    mobilePaymentinfosoalog:
+      zookeeper: 10.8.84.74:2181
+      groupID: spark-opsdev-test-liujia-201505052253
+      topics:
+        logstash-logginggw-mobile-paymentinfosoalog: 1
+
+# *********************************************
+# filter and grok mobile-trace topic
+# *********************************************
+filter:
+  - split:
+      #2015-05-06 10:31:20.584 10.8.115.111    25      1       95009701        32|604.001|32021111610000283088|356405054554549 2015-05-06 10:31:20.527 57    True|0   M104105601      8015    c73f170c-a311-4f88-a559-6e345bc0e57d
+      from: mobile
+      match:
+        - ['message', '(?P<logtime>\S+\s+\S+)\s+(?P<ServerIP>\S+)\s+\S+\s+\S+\s+(?P<ServiceCode>\S+)\s+\S+\s+(?P<StartTime>\S+\s+\S+)\s+(?P<Interval>\S+)\s*(?P<ServiceStatus>\w+)']
+      convert:
+        Interval: int
+      remove_fields: ['message']
+  - jinjafilter:
+      transformation: filter
+      if:
+        - "{{event.ServerIP in [ '10.8.5.113', '10.8.5.112', '10.8.5.99', '10.8.5.36', '10.8.5.39', '10.8.5.44']}}"
+  - date:
+      -
+        src: StartTime
+        target: "@timestamp"
+        format: "%Y-%m-%d %H:%M:%S.%f"
+  - jinjafilter:
+      id: mobileDate
+      transformation: filter
+      if:
+        - "{{event['@timestamp'] is defined}}"
+
+# ***************
+#  window and count
+# ***************
+  #- count:
+      #transformation: reduceByKey
+  #- window:
+      #transformation: window
+      #transformation_args:
+        #windowDuration: 300
+        #slideDuration: 5
+  - count:
+      id: count
+      transformation: reduceByKey
+  #- jinjafilter:
+      #id: trim_window
+      #transformation: filter
+      #if: 
+        #- "{{event.0.2|int//1000 + 300 >= ''|nowtime}}"
+        #- "{{event.0.2|int//1000 + 60 <= ''|nowtime}}"
+
+# ***********
+# output to graphite
+# ***********
+output:
+  - stdout:
+    from: count
+    transformation: foreachRDD
+    host: '192.168.82.151'
+    port: 2003
+    formatter: 
+      - "test.finance.{{event.0.1}}.{% if event.0.0=='1000'%}latency{%elif event.0.0=='5000'%}latencyHigh{%else%}{{event.0.0}}{%endif%} {{event.1.count}} {{event.0.2|int // 1000}}"
