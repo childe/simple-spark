@@ -168,7 +168,7 @@ public class DoIT {
 
 		buildInputs(streams, jssc, inputsConfig);
 
-		// filters
+		// function
 
 		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
 				.get("function");
