@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import transformation.Date;
-import transformation.Split;
 import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
@@ -25,6 +23,9 @@ import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 import org.yaml.snakeyaml.Yaml;
+
+import function.Date;
+import function.Split;
 
 public class DoIT {
 	@SuppressWarnings({ "unchecked" })
@@ -107,22 +108,12 @@ public class DoIT {
 						_transformation, Class.forName(filterType));
 				streams.put(streamId,
 						transformation.invoke(fromStream.getClass(), config));
-
 			} else {
 				JavaDStream fromStream = (JavaDStream) streams.get(from);
-				System.out.println("fromStream: " + fromStream);
-				System.out.println("_transformation: " + _transformation);
-				System.out.println("getClass: " + fromStream.getClass());
 				transformation = fromStream.getClass().getMethod(
 						_transformation, Function.class);
-
-				System.out.println("transformation " + transformation);
-
-				Class c = Class.forName("transformation." + filterType);
-
+				Class c = Class.forName("function." + filterType);
 				Constructor cc = c.getConstructor(HashMap.class);
-				System.out.println(cc.newInstance(config));
-
 				streams.put(
 						streamId,
 						transformation.invoke(fromStream,
@@ -183,7 +174,7 @@ public class DoIT {
 				.get("function");
 		buildFilter(streams, filterConfig);
 
-		JavaDStream a = ((JavaDStream) streams.get("date"));
+		JavaDStream a = ((JavaDStream) streams.get("splited"));
 		a.print();
 
 		/*
