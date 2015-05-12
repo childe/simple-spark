@@ -1,8 +1,10 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
@@ -14,16 +16,15 @@ import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
 import org.apache.spark.SparkConf;
-
-//import org.apache.spark.examples.streaming.StreamingExamples;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaDStreamLike;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
 import org.yaml.snakeyaml.Yaml;
-
-import com.twitter.chill.Base64.InputStream;
 
 public class DoIT {
 	@SuppressWarnings({ "unchecked" })
@@ -55,7 +56,6 @@ public class DoIT {
 					HashMap<String, Integer> topicsMap = (HashMap<String, Integer>) oneInputConfigWithCertainType
 							.get("topics");
 
-
 					String zkQuorum = (String) oneInputConfigWithCertainType
 							.get("zookeeper");
 					String group = (String) oneInputConfigWithCertainType
@@ -83,7 +83,8 @@ public class DoIT {
 
 	}
 
-	public static void main(String[] args) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 
 		// prepare configuration
@@ -122,8 +123,7 @@ public class DoIT {
 
 		HashMap<String, Object> inputsConfig = (HashMap<String, Object>) topologyConf
 				.get("input");
-		int batchDuration = Integer.parseInt((String) topologyConf
-				.get("batching_interval"));
+		int batchDuration = (int) topologyConf.get("batching_interval");
 		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
 				Durations.seconds(batchDuration));
 
@@ -131,37 +131,77 @@ public class DoIT {
 
 		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
 				.get("filter");
+		ArrayList<String> pairLike = new ArrayList<String>(Arrays.asList(
+				"reduceByKey", "join"));
+		for (Object object : filterConfig) {
+			HashMap<String, Object> _config = (HashMap<String, Object>) object;
+			Entry _conf = _config.entrySet().iterator().next();
+			String filterType = (String) _conf.getKey();
+			HashMap<String, Object> config = (HashMap<String, Object>) _conf
+					.getValue();
 
-		// kafaf streaming
-		JavaDStream<HashMap<String, Object>> trace = (JavaDStream<HashMap<String, Object>>) streams
-				.get("mobile");
-		// trace.print();
+			String streamId = (String) config.get("id");
+			String from = (String) config.get("from");
+			String _transformation = (String) config.get("transformation");
 
-		HashMap<String, Object> splitconf = new HashMap<String, Object>();
-		splitconf.put("delimiter", "\\t");
-		splitconf.put("src", "message");
-		HashMap<String, Integer> fields = new HashMap<String, Integer>();
-		fields.put("ServerIP", 1);
-		fields.put("ServiceCode", 4);
-		fields.put("StartTime", 6);
-		fields.put("Interval", 7);
-		fields.put("ServiceStatus", 8);
+			Method transformation = null;
+			if (pairLike.contains(_transformation)) {
+				JavaPairDStream fromStream = (JavaPairDStream) streams
+						.get(from);
+				transformation = fromStream.getClass().getMethod(
+						_transformation, Class.forName(filterType));
+				streams.put(streamId,
+						transformation.invoke(fromStream.getClass(), config));
 
-		splitconf.put("fields", fields);
-		JavaDStream<HashMap<String, Object>> splited = trace.map(new Split(
-				splitconf));
-		splited.print();
+			} else {
+				JavaDStream fromStream = (JavaDStream) streams.get(from);
+				System.out.println("fromStream: " + fromStream);
+				System.out.println("_transformation: " + _transformation);
+				System.out.println("getClass: " + fromStream.getClass());
+				transformation = fromStream.getClass().getMethod(
+						_transformation, Function.class);
 
-		HashMap<String, Object> traceDateConf = new HashMap<String, Object>();
-		traceDateConf.put("src", "StartTime");
-		traceDateConf.put("target", "@timestamp");
-		traceDateConf.put("format", "yyyy-MM-dd HH:mm:ss.SSS");
-		JavaDStream<HashMap<String, Object>> traceDate = splited.map(new Date(
-				traceDateConf));
+				System.out.println("transformation " + transformation);
 
-		traceDate.print();
+				Class c = Class.forName("transformation." + filterType);
+
+				Constructor cc = c.getConstructor(HashMap.class);
+				System.out.println(cc.newInstance(config));
+
+				streams.put(
+						streamId,
+						transformation.invoke(fromStream,
+								cc.newInstance(config)));
+			}
+		}
+		
+		((JavaDStream)streams.get("date")).print();
 
 		/*
+		 * // kafaf streaming JavaDStream<HashMap<String, Object>> trace =
+		 * (JavaDStream<HashMap<String, Object>>) streams .get("mobile"); //
+		 * trace.print();
+		 * 
+		 * HashMap<String, Object> splitconf = new HashMap<String, Object>();
+		 * splitconf.put("delimiter", "\\t"); splitconf.put("src", "message");
+		 * HashMap<String, Integer> fields = new HashMap<String, Integer>();
+		 * fields.put("ServerIP", 1); fields.put("ServiceCode", 4);
+		 * fields.put("StartTime", 6); fields.put("Interval", 7);
+		 * fields.put("ServiceStatus", 8);
+		 * 
+		 * splitconf.put("fields", fields); JavaDStream<HashMap<String, Object>>
+		 * splited = trace.map(new Split( splitconf)); splited.print();
+		 * 
+		 * HashMap<String, Object> traceDateConf = new HashMap<String,
+		 * Object>(); traceDateConf.put("src", "StartTime");
+		 * traceDateConf.put("target", "@timestamp");
+		 * traceDateConf.put("format", "yyyy-MM-dd HH:mm:ss.SSS");
+		 * JavaDStream<HashMap<String, Object>> traceDate = splited.map(new
+		 * Date( traceDateConf));
+		 * 
+		 * traceDate.print();
+		 * 
+		 * 
 		 * JavaPairDStream<ArrayList<String>, HashMap<String, Object>>
 		 * traceSetIntervalKey = traceDate .mapToPair(new
 		 * PairFunction<HashMap<String, Object>, ArrayList<String>,
