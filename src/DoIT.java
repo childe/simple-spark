@@ -28,7 +28,7 @@ import org.yaml.snakeyaml.Yaml;
 
 public class DoIT {
 	@SuppressWarnings({ "unchecked" })
-	public static void parseInputs(HashMap<String, Object> streams,
+	private static void parseInputs(HashMap<String, Object> streams,
 			JavaStreamingContext jssc, HashMap<String, Object> inputs) {
 
 		System.out.println(inputs);
@@ -84,53 +84,8 @@ public class DoIT {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static void main(String[] args) throws Exception {
-		// TODO Auto-generated method stub
-
-		// prepare configuration
-
-		Map<String, Object> topologyConf = null;
-		Yaml yaml = new Yaml();
-		FileInputStream input;
-		try {
-			input = new FileInputStream(new File(args[0]));
-			topologyConf = (Map<String, Object>) yaml.load(input);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		System.out.println(topologyConf);
-
-		// spark conf
-
-		String appName = (String) topologyConf.get("app_name");
-		SparkConf sparkConf = new SparkConf().setAppName(appName);
-
-		HashMap<String, Object> spark_conf = (HashMap<String, Object>) topologyConf
-				.get("spark_conf");
-		Iterator<Entry<String, Object>> it = spark_conf.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<String, Object> entry = it.next();
-			sparkConf.set(entry.getKey(), (String) entry.getValue());
-		}
-
-		// build streams
-
-		HashMap<String, Object> streams = new HashMap<String, Object>();
-
-		// input
-
-		HashMap<String, Object> inputsConfig = (HashMap<String, Object>) topologyConf
-				.get("input");
-		int batchDuration = (int) topologyConf.get("batching_interval");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
-				Durations.seconds(batchDuration));
-
-		parseInputs(streams, jssc, inputsConfig);
-
-		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
-				.get("filter");
+	private static void buildFilter(HashMap<String, Object> streams,
+			ArrayList<Object> filterConfig) throws Exception {
 		ArrayList<String> pairLike = new ArrayList<String>(Arrays.asList(
 				"reduceByKey", "join"));
 		for (Object object : filterConfig) {
@@ -174,8 +129,62 @@ public class DoIT {
 								cc.newInstance(config)));
 			}
 		}
-		
-		((JavaDStream)streams.get("date")).print();
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void main(String[] args) throws Exception {
+		// TODO Auto-generated method stub
+
+		// prepare configuration
+
+		Map<String, Object> topologyConf = null;
+		Yaml yaml = new Yaml();
+		FileInputStream input;
+		try {
+			input = new FileInputStream(new File(args[0]));
+			topologyConf = (Map<String, Object>) yaml.load(input);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println(topologyConf);
+
+		// spark conf
+
+		String appName = (String) topologyConf.get("app_name");
+		SparkConf sparkConf = new SparkConf().setAppName(appName);
+
+		HashMap<String, Object> spark_conf = (HashMap<String, Object>) topologyConf
+				.get("spark_conf");
+		Iterator<Entry<String, Object>> it = spark_conf.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, Object> entry = it.next();
+			sparkConf.set(entry.getKey(), (String) entry.getValue());
+		}
+
+		// build streams, it a topology: input -> filter -> output
+
+		HashMap<String, Object> streams = new HashMap<String, Object>();
+
+		// input
+
+		HashMap<String, Object> inputsConfig = (HashMap<String, Object>) topologyConf
+				.get("input");
+		int batchDuration = (int) topologyConf.get("batching_interval");
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
+				Durations.seconds(batchDuration));
+
+		parseInputs(streams, jssc, inputsConfig);
+
+		// filters
+
+		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
+				.get("filter");
+		buildFilter(streams, filterConfig);
+
+		JavaDStream a = ((JavaDStream) streams.get("date"));
+		a.print();
 
 		/*
 		 * // kafaf streaming JavaDStream<HashMap<String, Object>> trace =
