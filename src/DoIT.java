@@ -180,7 +180,7 @@ public class DoIT {
 		// filters
 
 		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
-				.get("filter");
+				.get("function");
 		buildFilter(streams, filterConfig);
 
 		JavaDStream a = ((JavaDStream) streams.get("date"));
