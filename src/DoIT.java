@@ -28,7 +28,7 @@ import org.yaml.snakeyaml.Yaml;
 
 public class DoIT {
 	@SuppressWarnings({ "unchecked" })
-	private static void parseInputs(HashMap<String, Object> streams,
+	private static void buildInputs(HashMap<String, Object> streams,
 			JavaStreamingContext jssc, HashMap<String, Object> inputs) {
 
 		System.out.println(inputs);
@@ -175,7 +175,7 @@ public class DoIT {
 		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf,
 				Durations.seconds(batchDuration));
 
-		parseInputs(streams, jssc, inputsConfig);
+		buildInputs(streams, jssc, inputsConfig);
 
 		// filters
 
