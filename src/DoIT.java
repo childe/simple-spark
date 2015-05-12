@@ -1,31 +1,27 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.lang.reflect.Constructor;
 
 import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaDStreamLike;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
+import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
+import org.apache.spark.api.java.function.Function;
 import org.yaml.snakeyaml.Yaml;
-
-import function.Date;
-import function.Split;
 
 public class DoIT {
 	@SuppressWarnings({ "unchecked" })
@@ -84,11 +80,9 @@ public class DoIT {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void buildFilter(HashMap<String, Object> streams,
 			ArrayList<Object> filterConfig) throws Exception {
-		ArrayList<String> pairLike = new ArrayList<String>(Arrays.asList(
-				"reduceByKey", "join"));
+
 		for (Object object : filterConfig) {
 			HashMap<String, Object> _config = (HashMap<String, Object>) object;
 			Entry _conf = _config.entrySet().iterator().next();
@@ -101,50 +95,43 @@ public class DoIT {
 			String _transformation = (String) config.get("transformation");
 
 			Method transformation = null;
-			if (pairLike.contains(_transformation)) {
-				JavaPairDStream fromStream = (JavaPairDStream) streams
-						.get(from);
-				transformation = fromStream.getClass().getMethod(
-						_transformation, Class.forName(filterType));
-				streams.put(streamId,
-						transformation.invoke(fromStream.getClass(), config));
-			} else {
-				JavaDStream fromStream = (JavaDStream) streams.get(from);
-				transformation = fromStream.getClass().getMethod(
-						_transformation, Function.class);
-				Class c = Class.forName("function." + filterType);
-				Constructor cc = c.getConstructor(HashMap.class);
-				streams.put(
-						streamId,
-						transformation.invoke(fromStream,
-								cc.newInstance(config)));
-			}
+
+			Object fromStream = streams.get(from);
+
+			transformation = fromStream.getClass().getMethod(_transformation,
+					Function.class);
+			Class c = Class.forName("function." + filterType);
+			Constructor cc = c.getConstructor(HashMap.class);
+			streams.put(streamId,
+					transformation.invoke(fromStream, cc.newInstance(config)));
+
 		}
+
 	}
 
 	private static void buildOutput(HashMap<String, Object> streams,
-			ArrayList<Object> outputConfig)   {
-		
+			ArrayList<Object> outputConfig) {
+
 		JavaDStream a = (JavaDStream) streams.get("date");
 		a.print();
-		/*for (Object object : outputConfig) {
-			HashMap<String, Object> _config = (HashMap<String, Object>) object;
-			Entry _conf = _config.entrySet().iterator().next();
-			String outputType = (String) _conf.getKey();
-			HashMap<String, Object> config = (HashMap<String, Object>) _conf
-					.getValue();
-
-			String from = (String) config.get("from");
-			String _transformation = (String) config.get("transformation");
-
-			Method transformation = null;
-
-			JavaDStream fromStream = (JavaDStream) streams.get(from);
-
-			transformation = fromStream.getClass().getMethod(_transformation,);
-			Class c = Class.forName("output." + outputType);
-			Constructor cc = c.getConstructor(HashMap.class);
-		}*/
+		/*
+		 * for (Object object : outputConfig) { HashMap<String, Object> _config
+		 * = (HashMap<String, Object>) object; Entry _conf =
+		 * _config.entrySet().iterator().next(); String outputType = (String)
+		 * _conf.getKey(); HashMap<String, Object> config = (HashMap<String,
+		 * Object>) _conf .getValue();
+		 * 
+		 * String from = (String) config.get("from"); String _transformation =
+		 * (String) config.get("transformation");
+		 * 
+		 * Method transformation = null;
+		 * 
+		 * JavaDStream fromStream = (JavaDStream) streams.get(from);
+		 * 
+		 * transformation = fromStream.getClass().getMethod(_transformation,);
+		 * Class c = Class.forName("output." + outputType); Constructor cc =
+		 * c.getConstructor(HashMap.class); }
+		 */
 
 	}
 
@@ -199,7 +186,6 @@ public class DoIT {
 		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
 				.get("function");
 		buildFilter(streams, filterConfig);
-
 
 		// output
 
