@@ -122,6 +122,32 @@ public class DoIT {
 		}
 	}
 
+	private static void buildOutput(HashMap<String, Object> streams,
+			ArrayList<Object> outputConfig)   {
+		
+		JavaDStream a = (JavaDStream) streams.get("date");
+		a.print();
+		/*for (Object object : outputConfig) {
+			HashMap<String, Object> _config = (HashMap<String, Object>) object;
+			Entry _conf = _config.entrySet().iterator().next();
+			String outputType = (String) _conf.getKey();
+			HashMap<String, Object> config = (HashMap<String, Object>) _conf
+					.getValue();
+
+			String from = (String) config.get("from");
+			String _transformation = (String) config.get("transformation");
+
+			Method transformation = null;
+
+			JavaDStream fromStream = (JavaDStream) streams.get(from);
+
+			transformation = fromStream.getClass().getMethod(_transformation,);
+			Class c = Class.forName("output." + outputType);
+			Constructor cc = c.getConstructor(HashMap.class);
+		}*/
+
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
@@ -174,8 +200,12 @@ public class DoIT {
 				.get("function");
 		buildFilter(streams, filterConfig);
 
-		JavaDStream a = ((JavaDStream) streams.get("splited"));
-		a.print();
+
+		// output
+
+		ArrayList<Object> outputConfig = (ArrayList<Object>) topologyConf
+				.get("output");
+		buildOutput(streams, outputConfig);
 
 		jssc.start();
 		jssc.awaitTermination();
