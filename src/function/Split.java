@@ -15,6 +15,8 @@ public class Split implements Function {
 	private String delimiter;
 	HashMap<String, Integer> fields;
 
+	static public final String defaultTransformation = "map";
+
 	public Split() {
 	}
 

@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Mutate implements Function {
+	
+	static public final String defaultTransformation = "map";
+	
 	@Override
 	public Object call(Object arg0) throws Exception {
 		// TODO Auto-generated method stub

@@ -9,6 +9,8 @@ import java.util.HashMap;
 
 public class Date implements Function {
 	ArrayList<HashMap<String, Object>> convert;
+	
+	static public final String defaultTransformation = "map";
 
 	public Date() {
 	}
