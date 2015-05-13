@@ -86,5 +86,13 @@ public class Split implements Function {
 		String message = "2015-05-07T11:15:58.326	|604.001|3202";
 		a = message.split("[\t|]");
 		System.out.println(a.length);
+
+		message = " 1427965391.659     29 10.8.74.48[-] TCP_MISS/500 150 513 GET http://www.weather.com.cn/weather/%E5%8B%83%E5%88%A9.shtml - HIER_DIRE    CT/180.97.161.108 text/html 500 -";
+		String delimiter = "\\s+|/";
+		System.out.println(delimiter.length());
+		a = message.split(delimiter);
+		for (int i = 0; i < a.length; i++) {
+			System.out.println(i + ": " + a[i]);
+		}
 	}
 }
