@@ -39,11 +39,14 @@ public class Setkey implements PairFunction {
 	public Tuple2 call(Object arg0) throws Exception {
 
 		// TODO Auto-generated method stub
-		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
+		final HashMap<String, Object> event = (HashMap<String, Object>) arg0;
 		ArrayList<String> key = new ArrayList<String>();
 
-		HashMap binding = new HashMap();
-		binding.put("event", event);
+		HashMap binding = new HashMap() {
+			{
+				put("event", event);
+			}
+		};
 		Context cc = new Context(JinManager.c, binding);
 
 		for (String _key : this.key) {
@@ -54,6 +57,6 @@ public class Setkey implements PairFunction {
 	}
 
 	public static void main(String[] args) {
-		
+
 	}
 }
