@@ -167,14 +167,16 @@ public class DoIT {
 							transform_args.get(0) * 1000));
 				}
 				if (_transformation.equalsIgnoreCase("union")) {
-					transformation = fromStream.getClass().getMethod(
-							_transformation, Object.class);
+
 					ArrayList<String> right = (ArrayList<String>) config
-							.get("String");
+							.get("right");
+					transformation = fromStream.getClass().getMethod(
+							_transformation,
+							streams.get(right.get(0)).getClass());
 					Object nextStream = fromStream;
 					for (String next : right) {
 						nextStream = transformation.invoke(nextStream,
-								streams.get("next"));
+								streams.get(next));
 					}
 					newStream = nextStream;
 				} else {
@@ -222,7 +224,7 @@ public class DoIT {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		
+
 		// prepare configuration
 
 		Map<String, Object> topologyConf = null;
