@@ -16,10 +16,36 @@ public class Mutate implements Function {
 
 	static public final String defaultTransformation = "map";
 
+	private void rename(HashMap<String, Object> event){};
+	private void update(HashMap<String, Object> event){};
+	private void replace(HashMap<String, Object> event){};
+	private void convert(HashMap<String, Object> event){};
+	private void gsub(HashMap<String, Object> event){};
+	private void uppercase(HashMap<String, Object> event){};
+	private void lowercase(HashMap<String, Object> event){};
+	private void strip(HashMap<String, Object> event){};
+	private void remove(HashMap<String, Object> event){};
+	private void split(HashMap<String, Object> event){};
+	private void join(HashMap<String, Object> event){};
+	private void merge(HashMap<String, Object> event){};
+	
 	@Override
 	public Object call(Object arg0) throws Exception {
 		// TODO Auto-generated method stub
 		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
+
+		rename(event);
+		update(event);
+		replace(event);
+		convert(event);
+		gsub(event);
+		uppercase(event);
+		lowercase(event);
+		strip(event);
+		remove(event);
+		split(event);
+		join(event);
+		merge(event);
 
 		return event;
 	}
@@ -29,7 +55,7 @@ public class Mutate implements Function {
 			System.out.println(a);
 		}
 	}
-	
+
 	public void testFunc2() {
 		System.out.println("testFunc2");
 	}
@@ -56,12 +82,12 @@ public class Mutate implements Function {
 		Class[] p = {};
 		parameters.add(String.class);
 		parameters.add(int.class);
-		 p =parameters.toArray(p);
+		p = parameters.toArray(p);
 		System.out.println(p);
-		
+
 		Class[] p2 = new Class[] { String.class, int.class };
 		System.out.println(p2);
-		
+
 		try {
 			Method m = Class.forName("function.Mutate").getMethod("testFunc1",
 					p);
@@ -75,11 +101,11 @@ public class Mutate implements Function {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		// test getMethod with void parameter
-		
+
 		try {
-			p = new Class[]{};
+			p = new Class[] {};
 			Method m = Class.forName("function.Mutate").getMethod("testFunc2",
 					p);
 
