@@ -11,14 +11,31 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 public class Split implements Function {
-	private HashMap<String, Object> conf;
+	private String src;
+	private String delimiter;
+	HashMap<String, Integer> fields;
 
 	public Split() {
-		this.conf = null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Split(HashMap<String, Object> conf) {
-		this.conf = conf;
+		System.out.println(conf);
+
+		if (!conf.containsKey("src")) {
+			this.src = "message";
+		} else {
+			this.src = (String) conf.get("src");
+		}
+
+		if (!conf.containsKey("delimiter")) {
+			this.delimiter = "\\s";
+		} else {
+			this.delimiter = (String) conf.get("delimiter");
+		}
+
+		this.fields = (HashMap<String, Integer>) conf.get("fields");
+
 	}
 
 	@Override
@@ -30,20 +47,14 @@ public class Split implements Function {
 			return event;
 		}
 
-		String src = (String) this.conf.get("src");
-
-		if (!event.containsKey(src)) {
+		if (!event.containsKey(this.src)) {
 			return event;
 		}
 
-		String delimiter = (String) this.conf.get("delimiter");
-
 		String[] splited = ((String) event.get(src)).split(delimiter);
 
-		@SuppressWarnings("unchecked")
-		HashMap<String, Integer> fields = (HashMap<String, Integer>) this.conf
-				.get("fields");
-		Iterator<Entry<String, Integer>> entries = fields.entrySet().iterator();
+		Iterator<Entry<String, Integer>> entries = this.fields.entrySet()
+				.iterator();
 		try {
 			while (entries.hasNext()) {
 
@@ -58,11 +69,10 @@ public class Split implements Function {
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			// e.printStackTrace();
+			e.printStackTrace();
 			return event;
 		}
 
-		event.remove("message");
 		return event;
 
 	}
@@ -70,8 +80,7 @@ public class Split implements Function {
 	public static void main(String[] args) {
 		String[] a = "True|1".split("\\|");
 		System.out.println(a[0]);
-		
-		
+
 		String message = "2015-05-07T11:15:58.326	|604.001|3202";
 		a = message.split("[\t|]");
 		System.out.println(a.length);
