@@ -16,19 +16,42 @@ public class Mutate implements Function {
 
 	static public final String defaultTransformation = "map";
 
-	private void rename(HashMap<String, Object> event){};
-	private void update(HashMap<String, Object> event){};
-	private void replace(HashMap<String, Object> event){};
-	private void convert(HashMap<String, Object> event){};
-	private void gsub(HashMap<String, Object> event){};
-	private void uppercase(HashMap<String, Object> event){};
-	private void lowercase(HashMap<String, Object> event){};
-	private void strip(HashMap<String, Object> event){};
-	private void remove(HashMap<String, Object> event){};
-	private void split(HashMap<String, Object> event){};
-	private void join(HashMap<String, Object> event){};
-	private void merge(HashMap<String, Object> event){};
-	
+	private void rename(HashMap<String, Object> event) {
+	};
+
+	private void update(HashMap<String, Object> event) {
+	};
+
+	private void replace(HashMap<String, Object> event) {
+	};
+
+	private void convert(HashMap<String, Object> event) {
+	};
+
+	private void gsub(HashMap<String, Object> event) {
+	};
+
+	private void uppercase(HashMap<String, Object> event) {
+	};
+
+	private void lowercase(HashMap<String, Object> event) {
+	};
+
+	private void strip(HashMap<String, Object> event) {
+	};
+
+	private void remove(HashMap<String, Object> event) {
+	};
+
+	private void split(HashMap<String, Object> event) {
+	};
+
+	private void join(HashMap<String, Object> event) {
+	};
+
+	private void merge(HashMap<String, Object> event) {
+	};
+
 	@Override
 	public Object call(Object arg0) throws Exception {
 		// TODO Auto-generated method stub
@@ -127,11 +150,20 @@ public class Mutate implements Function {
 		context.put("name", "Jared");
 		String template = "Hello, {% if name is defined %} {{name}} {% else %} world {% endif %}";
 
-		for (int i = 0; i < 70000; i++) {
+		for (int i = 0; i < 1; i++) {
 
 			jinjava.renderForResult(template, context);
 
 		}
 		System.out.println(System.currentTimeMillis() - s);
+
+		template = "{{event[\"@timestamp\"]}}";
+		context = new HashMap<>();
+		HashMap event = new HashMap<>();
+		event.put("@timestamp", 100000000);
+		context.put("event", event);
+		String rst = jinjava.render(template, context);
+		System.out.println(rst);
+
 	}
 }
