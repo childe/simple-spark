@@ -80,7 +80,7 @@ public class DoIT {
 
 	}
 
-	private static void buildFilter(HashMap<String, Object> streams,
+	private static void buildFunction(HashMap<String, Object> streams,
 			ArrayList<Object> filterConfig) throws Exception {
 
 		for (Object object : filterConfig) {
@@ -185,7 +185,7 @@ public class DoIT {
 
 		ArrayList<Object> filterConfig = (ArrayList<Object>) topologyConf
 				.get("function");
-		buildFilter(streams, filterConfig);
+		buildFunction(streams, filterConfig);
 
 		// output
 
