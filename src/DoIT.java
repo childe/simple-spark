@@ -1,7 +1,6 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,9 +13,9 @@ import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka.KafkaUtils;
@@ -90,21 +89,76 @@ public class DoIT {
 			HashMap<String, Object> config = (HashMap<String, Object>) _conf
 					.getValue();
 
+			// from stream
+
 			String streamId = (String) config.get("id");
 			String from = (String) config.get("from");
-			String _transformation = (String) config.get("transformation");
-
-			Method transformation = null;
 
 			Object fromStream = streams.get(from);
 
-			transformation = fromStream.getClass().getMethod(_transformation,
-					Function.class);
-			Class c = Class.forName("function." + filterType);
-			Constructor cc = c.getConstructor(HashMap.class);
-			streams.put(streamId,
-					transformation.invoke(fromStream, cc.newInstance(config)));
+			// transforation mothod
 
+			String _transformation = null;
+			Method transformation = null;
+			Object newStream = null;
+			Class c = null;
+			try { // try if it is our function.Function such as grok/date/mutate
+				c = Class.forName("function." + filterType);
+			} catch (ClassNotFoundException e) {
+				// it's not Function, it is transformation such as window
+			}
+
+			if (c != null) {
+				if (config.containsKey("transformation")) {
+					_transformation = (String) config.get("transformation");
+				} else {
+					_transformation = (String) c.getField(
+							"defaultTransformation").get(null);
+				}
+
+				transformation = fromStream.getClass().getMethod(
+						_transformation, Function.class);
+				Constructor cc = c.getConstructor(HashMap.class);
+				newStream = transformation.invoke(fromStream,
+						cc.newInstance(config));
+
+			} else {
+				_transformation = filterType;
+				
+				// really difficult for me to deal with java&java Api
+				
+				if (_transformation.equalsIgnoreCase("window")) {
+					transformation = fromStream.getClass().getMethod(
+							_transformation, Duration.class, Duration.class);
+					ArrayList<Integer> transform_args = (ArrayList<Integer>) config
+							.get("transform_args");
+					newStream = transformation.invoke(fromStream, new Duration(
+							transform_args.get(0) * 1000), new Duration(
+							transform_args.get(0) * 1000));
+				} 
+				if (_transformation.equalsIgnoreCase("union")) {
+					transformation = fromStream.getClass().getMethod(
+							_transformation, Object.class);
+					ArrayList<String> right = (ArrayList<String>) config
+							.get("String");
+					Object nextStream = fromStream;
+					for (String next : right) {
+						nextStream = transformation.invoke(nextStream, streams.get("next"));
+					}
+					newStream = nextStream;
+				} 
+				else {
+					Class[] p = {};
+					ArrayList<Class> parameters = new ArrayList<Class>();
+
+					for (Object arg : (ArrayList) config.get("transform_args")) {
+						parameters.add(arg.getClass());
+					}
+					p = parameters.toArray(p);
+				}
+			}
+
+			streams.put(streamId, newStream);
 		}
 
 	}
