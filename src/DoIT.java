@@ -15,6 +15,9 @@ import utils.firstProcess.Plain;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Durations;
+import org.apache.spark.streaming.api.java.JavaDStreamLike;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
+import org.apache.spark.streaming.api.java.JavaPairInputDStream;
 import org.apache.spark.streaming.api.java.JavaPairReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -81,8 +84,12 @@ public class DoIT {
 
 	private static void buildFunction(HashMap<String, Object> streams,
 			ArrayList<Object> filterConfig) throws Exception {
+		System.out.println(filterConfig);
 
 		for (Object object : filterConfig) {
+
+			System.out.println(object);
+
 			HashMap<String, Object> _config = (HashMap<String, Object>) object;
 			Entry _conf = _config.entrySet().iterator().next();
 			String filterType = (String) _conf.getKey();
@@ -116,8 +123,27 @@ public class DoIT {
 							"defaultTransformation").get(null);
 				}
 
+				String funcClass = "";
+				if (config.containsKey("function_class")) {
+					funcClass = (String) config.get("function_class");
+
+				} else {
+					try {
+						funcClass = (String) c.getField(
+								"defaultTransformationFunctionClass").get(null);
+					} catch (Exception e) {
+						funcClass = "Function";
+					}
+
+				}
+
+				System.out.println(funcClass);
+
 				transformation = fromStream.getClass().getMethod(
-						_transformation, Function.class);
+						_transformation,
+						Class.forName("org.apache.spark.api.java.function."
+								+ funcClass));
+
 				Constructor cc = c.getConstructor(HashMap.class);
 				newStream = transformation.invoke(fromStream,
 						cc.newInstance(config));
@@ -170,8 +196,8 @@ public class DoIT {
 	private static void buildOutput(HashMap<String, Object> streams,
 			ArrayList<Object> outputConfig) {
 
-		JavaDStream a = (JavaDStream) streams.get("date");
-		a.print();
+		((JavaDStreamLike) streams.get("date")).print();
+
 		/*
 		 * for (Object object : outputConfig) { HashMap<String, Object> _config
 		 * = (HashMap<String, Object>) object; Entry _conf =
