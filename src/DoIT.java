@@ -124,9 +124,13 @@ public class DoIT {
 
 			} else {
 				_transformation = filterType;
-				
-				// really difficult for me to deal with java&java Api
-				
+
+				// really difficult for me to deal with java&java Api.
+				// for example, two integer are passed to window function, but
+				// they are needed to converted to Duration type.
+				// I could format the config like [(60,Duration),(10,Duration)],
+				// but any other constructor method?
+
 				if (_transformation.equalsIgnoreCase("window")) {
 					transformation = fromStream.getClass().getMethod(
 							_transformation, Duration.class, Duration.class);
@@ -135,7 +139,7 @@ public class DoIT {
 					newStream = transformation.invoke(fromStream, new Duration(
 							transform_args.get(0) * 1000), new Duration(
 							transform_args.get(0) * 1000));
-				} 
+				}
 				if (_transformation.equalsIgnoreCase("union")) {
 					transformation = fromStream.getClass().getMethod(
 							_transformation, Object.class);
@@ -143,11 +147,11 @@ public class DoIT {
 							.get("String");
 					Object nextStream = fromStream;
 					for (String next : right) {
-						nextStream = transformation.invoke(nextStream, streams.get("next"));
+						nextStream = transformation.invoke(nextStream,
+								streams.get("next"));
 					}
 					newStream = nextStream;
-				} 
-				else {
+				} else {
 					Class[] p = {};
 					ArrayList<Class> parameters = new ArrayList<Class>();
 
