@@ -1,6 +1,7 @@
 package function;
 
 import jinfilter.Floor;
+import jinmanager.JinManager;
 
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
@@ -23,13 +24,12 @@ import java.util.Map;
 public class Setkey implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
-	private final Jinjava jinjava = new Jinjava();
-	private final Context c = this.jinjava.getGlobalContext();
+	static public final String defaultTransformationFunctionClass = "PairFunction";
 
 	// private ArrayList<Node> keylist;
 	private ArrayList<String> key;
 
-	public void Setkey(HashMap<String, Object> conf) {
+	public Setkey(HashMap<String, Object> conf) {
 		System.out.println(conf);
 		this.key = (ArrayList<String>) conf.get("key");
 
@@ -43,22 +43,21 @@ public class Setkey implements PairFunction {
 		// TokenParser t = new TokenParser(null, template);
 		// this.keylist.add(TreeParser.parseTree(t));
 		// }
-		
-		c.registerFilter(new Floor());
 	}
 
 	@Override
 	public Tuple2 call(Object arg0) throws Exception {
+
 		// TODO Auto-generated method stub
 		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
 		ArrayList<String> key = new ArrayList<String>();
-		
 
-		JinjavaInterpreter interpreter = new JinjavaInterpreter(this.jinjava,
-				c, null);
+		HashMap binding = new HashMap();
+		binding.put("event", event);
+		Context cc = new Context(JinManager.c, binding);
 
 		for (String _key : this.key) {
-			key.add(interpreter.render(_key));
+			key.add(JinManager.jinjava.render(_key, cc));
 		}
 
 		return new Tuple2(key, event);
