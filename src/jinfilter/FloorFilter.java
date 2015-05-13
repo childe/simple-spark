@@ -11,7 +11,7 @@ import com.hubspot.jinjava.parse.TokenParser;
 import com.hubspot.jinjava.tree.Node;
 import com.hubspot.jinjava.tree.TreeParser;
 
-public class Floor implements Filter {
+public class FloorFilter implements Filter {
 
 	@Override
 	public String getName() {
@@ -39,7 +39,7 @@ public class Floor implements Filter {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Floor f = new Floor();
+		FloorFilter f = new FloorFilter();
 
 		// Object a;
 		// a = f.filter(10, null, "5", "7", "20");

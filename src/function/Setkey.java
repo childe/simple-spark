@@ -1,25 +1,15 @@
 package function;
 
-import jinfilter.Floor;
 import jinmanager.JinManager;
 
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
 
-import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.interpret.Context;
-import com.hubspot.jinjava.interpret.JinjavaInterpreter;
-import com.hubspot.jinjava.parse.TokenParser;
-import com.hubspot.jinjava.tree.Node;
-import com.hubspot.jinjava.tree.TreeParser;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 public class Setkey implements PairFunction {
 
@@ -64,6 +54,6 @@ public class Setkey implements PairFunction {
 	}
 
 	public static void main(String[] args) {
-
+		
 	}
 }

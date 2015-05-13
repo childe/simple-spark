@@ -1,6 +1,6 @@
 package jinmanager;
 
-import jinfilter.Floor;
+import jinfilter.FloorFilter;
 
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.interpret.Context;
@@ -10,6 +10,6 @@ public class JinManager {
 	public static final Context c = jinjava.getGlobalContext();
 	
 	static {
-		c.registerFilter(new Floor());
+		c.registerFilter(new FloorFilter());
     }
 }
