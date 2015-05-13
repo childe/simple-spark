@@ -123,26 +123,8 @@ public class DoIT {
 							"defaultTransformation").get(null);
 				}
 
-				String funcClass = "";
-				if (config.containsKey("function_class")) {
-					funcClass = (String) config.get("function_class");
-
-				} else {
-					try {
-						funcClass = (String) c.getField(
-								"defaultTransformationFunctionClass").get(null);
-					} catch (Exception e) {
-						funcClass = "Function";
-					}
-
-				}
-
-				System.out.println(funcClass);
-
 				transformation = fromStream.getClass().getMethod(
-						_transformation,
-						Class.forName("org.apache.spark.api.java.function."
-								+ funcClass));
+						_transformation, c.getInterfaces()[0]);
 
 				Constructor cc = c.getConstructor(HashMap.class);
 				newStream = transformation.invoke(fromStream,
