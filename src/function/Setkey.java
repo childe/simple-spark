@@ -56,7 +56,10 @@ public class Setkey implements PairFunction {
 		return new Tuple2(key, event);
 	}
 
-	public static void main(String[] args) {
-
+	public static void main(String[] args) throws ClassNotFoundException {
+		Class<?>[] ifs = Class.forName("function.Setkey").getInterfaces();
+		for (Class<?> class1 : ifs) {
+			System.out.println(class1);
+		}
 	}
 }
