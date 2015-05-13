@@ -9,7 +9,7 @@ public class JinManager {
 	public static final Jinjava jinjava = new Jinjava();
 	public static final Context c = jinjava.getGlobalContext();
 	
-	public static void prepare(){
+	static {
 		c.registerFilter(new Floor());
-	}
+    }
 }

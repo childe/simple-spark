@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.lang.reflect.Constructor;
 
-import jinmanager.JinManager;
 import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
 
@@ -223,8 +222,6 @@ public class DoIT {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-
-		JinManager.prepare();
 		
 		// prepare configuration
 
