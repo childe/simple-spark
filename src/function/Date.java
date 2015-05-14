@@ -1,16 +1,19 @@
 package function;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
+
+import scala.Tuple2;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Date implements Function {
+public class Date implements PairFunction {
 	ArrayList<HashMap<String, Object>> convert;
-	
-	static public final String defaultTransformation = "map";
+
+	static public final String defaultTransformation = "mapToPair";
 
 	public Date() {
 	}
@@ -44,14 +47,11 @@ public class Date implements Function {
 	}
 
 	@Override
-	public Object call(Object arg0) {
+	public Tuple2 call(Object arg0) {
 		// TODO Auto-generated method stub
-		@SuppressWarnings("unchecked")
-		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
-
-		if (event == null) {
-			return event;
-		}
+		Tuple2 t = (Tuple2) arg0;
+		Object originKey = t._1;
+		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
 		for (HashMap<String, Object> object : this.convert) {
 			String src = (String) object.get("src");
@@ -85,7 +85,7 @@ public class Date implements Function {
 			}
 		}
 
-		return event;
+		return new Tuple2(originKey, event);
 	}
 
 	public static void main(String[] args) {
