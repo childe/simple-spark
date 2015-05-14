@@ -40,7 +40,7 @@ public class Count2 implements Function2 {
 
 		final int count0 = (int) (event0.containsKey("count") ? event0
 				.get("count") : 1);
-		final int count1 = (int) (event1.containsKey("count") ? event0
+		final int count1 = (int) (event1.containsKey("count") ? event1
 				.get("count") : 1);
 
 		return new HashMap<String, Integer>() {
