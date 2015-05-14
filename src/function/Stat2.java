@@ -44,12 +44,12 @@ public class Stat2 implements Function2 {
 		final int count1 = (int) (event1.containsKey(this.countkey) ? event0
 				.get(countkey) : 1);
 
-		final int sum0 = (int) (event0.containsKey(this.field + "_sum") ? event0
-				.get(this.field + "_sum") : 1);
-		final int sum1 = (int) (event1.containsKey(this.field + "_sum") ? event0
-				.get(this.field + "_sum") : 1);
+		final int sum0 = (int) (event0.containsKey(this.sumkey) ? event0
+				.get(this.sumkey) : event0.get(this.field));
+		final float sum1 = (int) (event1.containsKey(this.sumkey) ? event0
+				.get(this.sumkey) : event1.get(this.field));
 
-		return new HashMap<String, Integer>() {
+		return new HashMap<String, Object>() {
 			{
 				put(countkey, count0 + count1);
 				put(sumkey, sum0 + sum1);
