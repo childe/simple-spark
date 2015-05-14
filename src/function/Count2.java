@@ -23,12 +23,17 @@ public class Count2 implements Function2 {
 
 	static public final String defaultTransformationFunctionClass = "Function2";
 
-	public Count2() {
-	}
+	private final String countkey;
 
 	@SuppressWarnings("unchecked")
 	public Count2(HashMap<String, Object> conf) {
 		System.out.println(conf);
+
+		if (conf.containsKey("countkey")) {
+			this.countkey = (String) conf.get("countkey");
+		} else {
+			this.countkey = "count";
+		}
 	}
 
 	@Override
@@ -38,14 +43,14 @@ public class Count2 implements Function2 {
 		HashMap<String, Object> event0 = (HashMap<String, Object>) arg0;
 		HashMap<String, Object> event1 = (HashMap<String, Object>) arg1;
 
-		final int count0 = (int) (event0.containsKey("count") ? event0
-				.get("count") : 1);
-		final int count1 = (int) (event1.containsKey("count") ? event1
-				.get("count") : 1);
+		final int count0 = (int) (event0.containsKey(this.countkey) ? event0
+				.get(this.countkey) : 1);
+		final int count1 = (int) (event1.containsKey(this.countkey) ? event1
+				.get(this.countkey) : 1);
 
 		return new HashMap<String, Integer>() {
 			{
-				put("count", count0 + count1);
+				put(countkey, count0 + count1);
 			}
 		};
 	}
