@@ -148,8 +148,7 @@ public class DoIT {
 					newStream = transformation.invoke(fromStream, new Duration(
 							transform_args.get(0) * 1000), new Duration(
 							transform_args.get(0) * 1000));
-				}
-				else if (_transformation.equalsIgnoreCase("union")) {
+				} else if (_transformation.equalsIgnoreCase("union")) {
 
 					ArrayList<String> right = (ArrayList<String>) config
 							.get("right");
@@ -245,15 +244,17 @@ public class DoIT {
 						parameters.add(arg.getClass());
 					}
 					p = parameters.toArray(p);
+					transformation = fromStream.getClass().getMethod(
+							_transformation, p);
+
+					transformation.invoke(fromStream, transform_args);
 				}
 
 				transformation = fromStream.getClass().getMethod(
 						_transformation, p);
-
-				transformation.invoke(fromStream, transform_args.toArray());
+				transformation.invoke(fromStream);
 			}
 		}
-
 		/*
 		 * for (Object object : outputConfig) { HashMap<String, Object> _config
 		 * = (HashMap<String, Object>) object; Entry _conf =
