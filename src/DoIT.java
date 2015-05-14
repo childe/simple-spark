@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -169,6 +170,8 @@ public class DoIT {
 						parameters.add(arg.getClass());
 					}
 					p = parameters.toArray(p);
+
+					// TODO newstream
 				}
 			}
 
@@ -178,9 +181,68 @@ public class DoIT {
 	}
 
 	private static void buildOutput(HashMap<String, Object> streams,
-			ArrayList<Object> outputConfig) {
+			ArrayList<Object> outputConfig) throws NoSuchMethodException,
+			SecurityException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException {
 
-		((JavaDStreamLike) streams.get("date")).print();
+		for (Object object : outputConfig) {
+			System.out.println(object);
+
+			HashMap<String, Object> _config = (HashMap<String, Object>) object;
+			Entry _conf = _config.entrySet().iterator().next();
+
+			String filterType = (String) _conf.getKey();
+			HashMap<String, Object> config = (HashMap<String, Object>) _conf
+					.getValue();
+
+			String from = (String) config.get("from");
+
+			Object fromStream = streams.get(from);
+
+			String _transformation = null;
+			Method transformation = null;
+			Object newStream = null;
+			Class c = null;
+			try { // try if it is our function.Function such as grok/date/mutate
+				c = Class.forName("function." + filterType);
+			} catch (ClassNotFoundException e) {
+				// it's not Function, it is transformation such as window
+			}
+
+			if (c != null) {
+				// if (config.containsKey("transformation")) {
+				// _transformation = (String) config.get("transformation");
+				// } else {
+				// _transformation = (String) c.getField(
+				// "defaultTransformation").get(null);
+				// }
+				//
+				// transformation = fromStream.getClass().getMethod(
+				// _transformation, c.getInterfaces()[0]);
+				//
+				// Constructor cc = c.getConstructor(HashMap.class);
+				// newStream = transformation.invoke(fromStream,
+				// cc.newInstance(config));
+
+			} else {
+				_transformation = filterType;
+
+				Class[] p = {};
+				ArrayList<Class> parameters = new ArrayList<Class>();
+
+				if (config.containsKey("transform_args")){
+				for (Object arg : (ArrayList) config.get("transform_args")) {
+					parameters.add(arg.getClass());
+				}
+					p = parameters.toArray(p);
+				}
+
+				transformation = fromStream.getClass().getMethod(
+						_transformation, p);
+
+				transformation.invoke(fromStream, p);
+			}
+		}
 
 		/*
 		 * for (Object object : outputConfig) { HashMap<String, Object> _config
@@ -226,8 +288,8 @@ public class DoIT {
 
 		String appName = (String) topologyConf.get("app_name");
 		String master = (String) topologyConf.get("master");
-		SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(master);
-		
+		SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(
+				master);
 
 		HashMap<String, Object> spark_conf = (HashMap<String, Object>) topologyConf
 				.get("spark_conf");
