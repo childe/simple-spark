@@ -16,7 +16,7 @@ import javax.ws.rs.PUT;
 
 import jinmanager.JinManager;
 
-public class Count2 implements Function2 {
+public class Count implements Function2 {
 	ArrayList<HashMap<String, Object>> convert;
 
 	static public final String defaultTransformation = "reduceByKey";
@@ -26,7 +26,7 @@ public class Count2 implements Function2 {
 	private final String countkey;
 
 	@SuppressWarnings("unchecked")
-	public Count2(HashMap<String, Object> conf) {
+	public Count(HashMap<String, Object> conf) {
 		System.out.println(conf);
 
 		if (conf.containsKey("countkey")) {
