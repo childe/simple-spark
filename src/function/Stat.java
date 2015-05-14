@@ -16,7 +16,7 @@ import javax.ws.rs.PUT;
 
 import jinmanager.JinManager;
 
-public class Stat2 implements Function2 {
+public class Stat implements Function2 {
 	ArrayList<HashMap<String, Object>> convert;
 
 	static public final String defaultTransformation = "reduceByKey";
@@ -24,7 +24,7 @@ public class Stat2 implements Function2 {
 	private final String field, countkey, sumkey;
 
 	@SuppressWarnings("unchecked")
-	public Stat2(HashMap<String, Object> conf) {
+	public Stat(HashMap<String, Object> conf) {
 		System.out.println(conf);
 
 		this.field = (String) conf.get("field");
