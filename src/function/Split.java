@@ -1,6 +1,9 @@
 package function;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
+
+import scala.Tuple2;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,12 +13,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class Split implements Function {
+public class Split implements PairFunction {
 	private String src;
 	private String delimiter;
 	HashMap<String, Integer> fields;
 
-	static public final String defaultTransformation = "map";
+	static public final String defaultTransformation = "mapToPair";
 
 	public Split() {
 	}
@@ -40,17 +43,14 @@ public class Split implements Function {
 
 	}
 
-	@Override
-	public Object call(Object arg0) {
+	public Tuple2 call(Object arg0) {
 		// TODO Auto-generated method stub
-		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
-
-		if (event == null) {
-			return event;
-		}
+		Tuple2 t = (Tuple2) arg0;
+		Object originKey = t._1;
+		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
 		if (!event.containsKey(this.src)) {
-			return event;
+			return new Tuple2(originKey, event);
 		}
 
 		String[] splited = ((String) event.get(src)).split(delimiter);
@@ -72,10 +72,10 @@ public class Split implements Function {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return event;
+			return new Tuple2(originKey, event);
 		}
 
-		return event;
+		return new Tuple2(originKey, event);
 
 	}
 
