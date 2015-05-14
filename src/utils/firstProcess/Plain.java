@@ -3,11 +3,12 @@ package utils.firstProcess;
 import java.util.HashMap;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.json.simple.JSONValue;
 
 import scala.Tuple2;
 
-public class Plain implements Function {
+public class Plain implements PairFunction {
 
 	/**
 	 * 
@@ -15,14 +16,16 @@ public class Plain implements Function {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public Object call(Object arg0) throws Exception {
+	public Tuple2 call(Object arg0) throws Exception {
 		// TODO Auto-generated method stub
-		String message = ((Tuple2<String, String>) arg0)._2();
+		Tuple2 t = (Tuple2) arg0;
+		Object key = t._1;
+		String message = (String) t._2;
 
 		HashMap<String, Object> event = new HashMap<String, Object>();
 		event.put("message", message);
-		
-		return event;
+
+		return new Tuple2(key, event);
 
 	}
 }

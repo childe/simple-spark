@@ -72,9 +72,9 @@ public class DoIT {
 							.createStream(jssc, zkQuorum, group, topicsMap);
 
 					if (codec.equalsIgnoreCase("json")) {
-						streams.put(streamID, a.map(new Json()));
+						streams.put(streamID, a.mapToPair(new Json()));
 					} else if (codec.equalsIgnoreCase("plain")) {
-						streams.put(streamID, a.map(new Plain()));
+						streams.put(streamID, a.mapToPair(new Plain()));
 					}
 
 				}
