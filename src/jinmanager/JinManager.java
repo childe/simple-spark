@@ -1,6 +1,7 @@
 package jinmanager;
 
 import jinfilter.FloorFilter;
+import jinfilter.NowtimeFilter;
 
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.interpret.Context;
@@ -11,5 +12,6 @@ public class JinManager {
 	
 	static {
 		c.registerFilter(new FloorFilter());
+		c.registerFilter(new NowtimeFilter());
     }
 }
