@@ -65,7 +65,7 @@ public class Filter2 implements Function {
 			{
 
 				add("name");
-				add("29");
+				add("3");
 			}
 		};
 		HashMap binding = new HashMap() {
@@ -75,9 +75,11 @@ public class Filter2 implements Function {
 		};
 
 		
-		String template = "{{event[0][1]|int>20}}";
+		String template = "{{event[0][1]|int*1000000000000> ''|nowtime/1000}}";
+		
+		Context cc = new Context(JinManager.c, binding);
 
-		String s = jinjava.render(template, binding);
+		String s = jinjava.render(template, cc);
 		System.out.println(s);
 
 	}
