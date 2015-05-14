@@ -20,10 +20,7 @@ public class Filter implements Function {
 
 	static public final String defaultTransformation = "filter";
 
-	private ArrayList<String> IF;
-
-	public Filter() {
-	}
+	private final ArrayList<String> IF;
 
 	@SuppressWarnings("unchecked")
 	public Filter(HashMap<String, Object> conf) {

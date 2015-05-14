@@ -20,11 +20,8 @@ public class Count2 implements Function2 {
 	ArrayList<HashMap<String, Object>> convert;
 
 	static public final String defaultTransformation = "reduceByKey";
-	
 
 	static public final String defaultTransformationFunctionClass = "Function2";
-
-	private ArrayList<String> IF;
 
 	public Count2() {
 	}
