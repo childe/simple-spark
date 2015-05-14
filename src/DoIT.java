@@ -149,7 +149,7 @@ public class DoIT {
 							transform_args.get(0) * 1000), new Duration(
 							transform_args.get(0) * 1000));
 				}
-				if (_transformation.equalsIgnoreCase("union")) {
+				else if (_transformation.equalsIgnoreCase("union")) {
 
 					ArrayList<String> right = (ArrayList<String>) config
 							.get("right");
@@ -165,9 +165,11 @@ public class DoIT {
 				} else {
 					Class[] p = {};
 					ArrayList<Class> parameters = new ArrayList<Class>();
-					ArrayList transform_args = (ArrayList) config.get("transform_args");
+					ArrayList transform_args = (ArrayList) config
+							.get("transform_args");
 					if (transform_args != null) {
-						for (Object arg : (ArrayList) config.get("transform_args")) {
+						for (Object arg : (ArrayList) config
+								.get("transform_args")) {
 							parameters.add(arg.getClass());
 						}
 						p = parameters.toArray(p);
@@ -176,7 +178,8 @@ public class DoIT {
 					transformation = fromStream.getClass().getMethod(
 							_transformation, p);
 
-					newStream = transformation.invoke(fromStream, transform_args);
+					newStream = transformation.invoke(fromStream,
+							transform_args);
 				}
 			}
 
@@ -235,7 +238,8 @@ public class DoIT {
 				Class[] p = {};
 				ArrayList<Class> parameters = new ArrayList<Class>();
 
-				ArrayList transform_args = (ArrayList) config.get("transform_args");
+				ArrayList transform_args = (ArrayList) config
+						.get("transform_args");
 				if (transform_args != null) {
 					for (Object arg : (ArrayList) config.get("transform_args")) {
 						parameters.add(arg.getClass());
@@ -246,7 +250,7 @@ public class DoIT {
 				transformation = fromStream.getClass().getMethod(
 						_transformation, p);
 
-				transformation.invoke(fromStream, transform_args);
+				transformation.invoke(fromStream, transform_args.toArray());
 			}
 		}
 
