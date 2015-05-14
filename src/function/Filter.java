@@ -13,7 +13,7 @@ import java.util.Map;
 import scala.Tuple2;
 import jinmanager.JinManager;
 
-public class Filter2 implements Function {
+public class Filter implements Function {
 	ArrayList<HashMap<String, Object>> convert;
 
 	static public final String defaultTransformation = "filter";
@@ -21,7 +21,7 @@ public class Filter2 implements Function {
 	private final ArrayList<String> IF;
 
 	@SuppressWarnings("unchecked")
-	public Filter2(HashMap<String, Object> conf) {
+	public Filter(HashMap<String, Object> conf) {
 		System.out.println(conf);
 
 		this.IF = (ArrayList<String>) conf.get("if");
