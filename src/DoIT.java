@@ -225,7 +225,9 @@ public class DoIT {
 		// spark conf
 
 		String appName = (String) topologyConf.get("app_name");
-		SparkConf sparkConf = new SparkConf().setAppName(appName);
+		String master = (String) topologyConf.get("master");
+		SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(master);
+		
 
 		HashMap<String, Object> spark_conf = (HashMap<String, Object>) topologyConf
 				.get("spark_conf");
