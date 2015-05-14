@@ -165,13 +165,18 @@ public class DoIT {
 				} else {
 					Class[] p = {};
 					ArrayList<Class> parameters = new ArrayList<Class>();
-
-					for (Object arg : (ArrayList) config.get("transform_args")) {
-						parameters.add(arg.getClass());
+					ArrayList transform_args = (ArrayList) config.get("transform_args");
+					if (transform_args != null) {
+						for (Object arg : (ArrayList) config.get("transform_args")) {
+							parameters.add(arg.getClass());
+						}
+						p = parameters.toArray(p);
 					}
-					p = parameters.toArray(p);
 
-					// TODO newstream
+					transformation = fromStream.getClass().getMethod(
+							_transformation, p);
+
+					newStream = transformation.invoke(fromStream, transform_args);
 				}
 			}
 
@@ -230,17 +235,18 @@ public class DoIT {
 				Class[] p = {};
 				ArrayList<Class> parameters = new ArrayList<Class>();
 
-				if (config.containsKey("transform_args")){
-				for (Object arg : (ArrayList) config.get("transform_args")) {
-					parameters.add(arg.getClass());
-				}
+				ArrayList transform_args = (ArrayList) config.get("transform_args");
+				if (transform_args != null) {
+					for (Object arg : (ArrayList) config.get("transform_args")) {
+						parameters.add(arg.getClass());
+					}
 					p = parameters.toArray(p);
 				}
 
 				transformation = fromStream.getClass().getMethod(
 						_transformation, p);
 
-				transformation.invoke(fromStream, p);
+				transformation.invoke(fromStream, transform_args);
 			}
 		}
 
