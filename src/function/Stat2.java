@@ -41,7 +41,7 @@ public class Stat2 implements Function2 {
 
 		final int count0 = (int) (event0.containsKey(this.countkey) ? event0
 				.get(countkey) : 1);
-		final int count1 = (int) (event1.containsKey(this.countkey) ? event0
+		final int count1 = (int) (event1.containsKey(this.countkey) ? event1
 				.get(countkey) : 1);
 
 		float sum0 = 0;
