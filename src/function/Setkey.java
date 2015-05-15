@@ -14,7 +14,6 @@ import java.util.HashMap;
 public class Setkey implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
-	static public final String defaultTransformationFunctionClass = "PairFunction";
 
 	// private ArrayList<Node> keylist;
 	private ArrayList<String> key;
@@ -37,18 +36,19 @@ public class Setkey implements PairFunction {
 
 	@Override
 	public Tuple2 call(Object arg0) throws Exception {
-		
 		Tuple2 t = (Tuple2) arg0;
+		final Object originKey = t._1;
 		final HashMap<String, Object> event = (HashMap<String, Object>) t._2;
-		
-		ArrayList<String> key = new ArrayList<String>();
 
 		HashMap binding = new HashMap() {
 			{
-				put("event", event);
+				put("event", new Object[] { originKey, event });
 			}
 		};
+
 		Context cc = new Context(JinManager.c, binding);
+
+		ArrayList<String> key = new ArrayList<String>();
 
 		for (String _key : this.key) {
 			key.add(JinManager.jinjava.render(_key, cc));
