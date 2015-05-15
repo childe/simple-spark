@@ -37,9 +37,10 @@ public class Setkey implements PairFunction {
 
 	@Override
 	public Tuple2 call(Object arg0) throws Exception {
-
-		// TODO Auto-generated method stub
-		final HashMap<String, Object> event = (HashMap<String, Object>) arg0;
+		
+		Tuple2 t = (Tuple2) arg0;
+		final HashMap<String, Object> event = (HashMap<String, Object>) t._2;
+		
 		ArrayList<String> key = new ArrayList<String>();
 
 		HashMap binding = new HashMap() {
