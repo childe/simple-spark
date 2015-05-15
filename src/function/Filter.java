@@ -60,7 +60,7 @@ public class Filter implements Function {
 				put("age", 29);
 			}
 		};
-		
+
 		final ArrayList<String> key = new ArrayList<String>() {
 			{
 
@@ -70,16 +70,23 @@ public class Filter implements Function {
 		};
 		HashMap binding = new HashMap() {
 			{
-				put("event", new ArrayList(Arrays.asList(key,value)));
+				put("event", new ArrayList(Arrays.asList(key, value)));
 			}
 		};
-
-		
-		String template = "{{event[0][1]|int*1000000000000> ''|nowtime/1000}}";
-		
 		Context cc = new Context(JinManager.c, binding);
+		String template, s;
 
-		String s = jinjava.render(template, cc);
+		template = "{{event[1].age}}";
+		s = jinjava.render(template, cc);
+		System.out.println(s);
+
+		template = "{{event[0][1]|int*1000000000000> ''|nowtime/1000}}";
+		s = jinjava.render(template, cc);
+		System.out.println(s);
+
+		
+		template = "{{event[1].gender|default(event[1].age)}}";
+		s = jinjava.render(template, cc);
 		System.out.println(s);
 
 	}
