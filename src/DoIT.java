@@ -147,7 +147,7 @@ public class DoIT {
 							.get("transform_args");
 					newStream = transformation.invoke(fromStream, new Duration(
 							transform_args.get(0) * 1000), new Duration(
-							transform_args.get(0) * 1000));
+							transform_args.get(1) * 1000));
 				} else if (_transformation.equalsIgnoreCase("union")) {
 
 					ArrayList<String> right = (ArrayList<String>) config
