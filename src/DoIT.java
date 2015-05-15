@@ -188,9 +188,7 @@ public class DoIT {
 	}
 
 	private static void buildOutput(HashMap<String, Object> streams,
-			ArrayList<Object> outputConfig) throws NoSuchMethodException,
-			SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
+			ArrayList<Object> outputConfig) throws Exception {
 
 		for (Object object : outputConfig) {
 			System.out.println(object);
@@ -211,25 +209,25 @@ public class DoIT {
 			Object newStream = null;
 			Class c = null;
 			try { // try if it is our function.Function such as grok/date/mutate
-				c = Class.forName("function." + filterType);
+				c = Class.forName("output." + filterType);
 			} catch (ClassNotFoundException e) {
 				// it's not Function, it is transformation such as window
 			}
 
 			if (c != null) {
-				// if (config.containsKey("transformation")) {
-				// _transformation = (String) config.get("transformation");
-				// } else {
-				// _transformation = (String) c.getField(
-				// "defaultTransformation").get(null);
-				// }
-				//
-				// transformation = fromStream.getClass().getMethod(
-				// _transformation, c.getInterfaces()[0]);
-				//
-				// Constructor cc = c.getConstructor(HashMap.class);
-				// newStream = transformation.invoke(fromStream,
-				// cc.newInstance(config));
+				if (config.containsKey("transformation")) {
+					_transformation = (String) config.get("transformation");
+				} else {
+					_transformation = (String) c.getField(
+							"defaultTransformation").get(null);
+				}
+
+				transformation = fromStream.getClass().getMethod(
+						_transformation, c.getInterfaces()[0]);
+
+				Constructor cc = c.getConstructor(HashMap.class);
+				newStream = transformation.invoke(fromStream,
+						cc.newInstance(config));
 
 			} else {
 				_transformation = filterType;
