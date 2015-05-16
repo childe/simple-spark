@@ -61,7 +61,7 @@ public class Stat implements Function2 {
 			sum1 = (float) event1.get(this.sumkey);
 		} else {
 			try {
-				sum0 = Float.parseFloat((String) event1.get(this.field));
+				sum1 = Float.parseFloat((String) event1.get(this.field));
 			} catch (Exception e) {
 
 			}
@@ -75,5 +75,21 @@ public class Stat implements Function2 {
 				put(sumkey, sum);
 			}
 		};
+	}
+	
+	public static void main(String[] args){
+		HashMap pair = new HashMap();
+		ArrayList a1 = new ArrayList(){{
+			add(1);add(2);
+		}};
+		ArrayList a2 = new ArrayList(){{
+			add(1);add(2);add(3);
+		}};
+		
+		pair.put(a1, 1);
+		pair.put(a2, 2);
+		
+		System.out.println(pair.size());
+		
 	}
 }
