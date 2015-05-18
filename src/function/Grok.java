@@ -80,7 +80,7 @@ public class Grok implements PairFunction {
 				ArrayList<Tuple2> pAndGns = (ArrayList<Tuple2>) match._2;
 				for (Tuple2 pAndgn : pAndGns) {
 					Pattern p = (Pattern) pAndgn._1;
-					
+
 					Matcher m = p.matcher(input);
 
 					if (!m.find()) {
@@ -91,7 +91,7 @@ public class Grok implements PairFunction {
 					for (String groupname : groupnames) {
 						event.put(groupname, (String) m.group(groupname));
 					}
-					
+
 					break;
 				}
 
@@ -109,9 +109,16 @@ public class Grok implements PairFunction {
 
 	public static void main(String[] args) {
 		String input = "   1427965391.659     29 10.8.74.48[-] TCP_MISS/500 150 513 GET http://www.weather.com.cn/weather/%E5%8B%83%E5%88%A9.shtml - HIER_DIRECT/180.9    7.161.108 text/html 500 -";
-		String pattern = "\\s*(?<logtime>\\S+)\\s+(?<responseTime>\\d+)\\s+\\S+[^/]+/(?<requeststatusCode>\\d+)(\\s+\\S+){3}\\s+(.*://)?(?<domain>[^/]+)/";
+		String pattern = "\\s*(?<logtime>\\S+)\\s+(?<responseTime>\\d+)\\s+\\S+[^/]+/(?<requeststatusCode>\\d+)(\\s+\\S+){3}\\s+(.*://)?(?<domain>[^/:]+)";
 		Matcher m = Pattern.compile(pattern).matcher(input);
 		m.find();
 		System.out.println(m.group("logtime"));
+		System.out.println(m.group("domain"));
+
+		input = "     1431920251.572    303 10.8.88.136[-] TCP_MISS/200 166 4386 CONNECT api.weixin.qq.com:443 - HIER_DIRECT/101.226.90.58 -   - -";
+		m = Pattern.compile(pattern).matcher(input);
+		m.find();
+		System.out.println(m.group("logtime"));
+		System.out.println(m.group("domain"));
 	}
 }
