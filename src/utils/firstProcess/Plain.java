@@ -16,7 +16,7 @@ public class Plain implements PairFunction {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public Tuple2 call(Object arg0) throws Exception {
+	public Tuple2 call(Object arg0) {
 		// TODO Auto-generated method stub
 		Tuple2 t = (Tuple2) arg0;
 		Object key = t._1;
@@ -26,6 +26,5 @@ public class Plain implements PairFunction {
 		event.put("message", message);
 
 		return new Tuple2(key, event);
-
 	}
 }
