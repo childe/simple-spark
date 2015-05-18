@@ -41,7 +41,7 @@ public class Tcp implements Function2 {
 		if (conf.containsKey("format")) {
 			String _format = "";
 			for (String string : (ArrayList<String>) conf.get("format")) {
-				_format += "\n" + string;
+				_format += string + "\n";
 			}
 			this.format = _format;
 		} else {
@@ -79,11 +79,11 @@ public class Tcp implements Function2 {
 
 					Context cc = new Context(JinManager.c, binding);
 
-					msg += "\n" + JinManager.jinjava.render(format, cc);
+					msg += JinManager.jinjava.render(format, cc);
 
 				}
 
-				System.out.println(msg);
+				System.out.print(msg);
 
 				int try_count = 0;
 				while (try_count < tryTime) {
