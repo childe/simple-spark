@@ -18,9 +18,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Grok implements PairFunction {
-	
+
 	static public final String defaultTransformation = "mapToPair";
-	
+
 	final private ArrayList<Tuple2> matches;
 
 	@SuppressWarnings("unchecked")
@@ -75,21 +75,26 @@ public class Grok implements PairFunction {
 				if (!event.containsKey(src)) {
 					continue;
 				}
-
-				Tuple2 pAndgn = (Tuple2) match._2;
-				Pattern p = (Pattern) pAndgn._1;
-
 				String input = (String) event.get(src);
-				Matcher m = p.matcher(input);
 
-				if (!m.find()) {
-					continue;
+				ArrayList<Tuple2> pAndGns = (ArrayList<Tuple2>) match._2;
+				for (Tuple2 pAndgn : pAndGns) {
+					Pattern p = (Pattern) pAndgn._1;
+					
+					Matcher m = p.matcher(input);
+
+					if (!m.find()) {
+						continue;
+					}
+
+					Set<String> groupnames = (Set) pAndgn._2;
+					for (String groupname : groupnames) {
+						event.put(groupname, (String) m.group(groupname));
+					}
+					
+					break;
 				}
 
-				Set<String> groupnames = (Set) pAndgn._2;
-				for (String groupname : groupnames) {
-					event.put(groupname, (String) m.group(groupname));
-				}
 			}
 
 		} catch (Exception e) {
