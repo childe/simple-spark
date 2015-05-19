@@ -1,6 +1,8 @@
 package jinmanager;
 
+import jinfilter.DoubleFilter;
 import jinfilter.FloorFilter;
+import jinfilter.IntegerFilter;
 import jinfilter.NowtimeFilter;
 
 import com.hubspot.jinjava.Jinjava;
@@ -13,5 +15,7 @@ public class JinManager {
 	static {
 		c.registerFilter(new FloorFilter());
 		c.registerFilter(new NowtimeFilter());
+		c.registerFilter(new DoubleFilter());
+		c.registerFilter(new IntegerFilter());
     }
 }
