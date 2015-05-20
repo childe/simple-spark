@@ -43,7 +43,7 @@ public class DoubleFilter implements Filter {
 
 				put("name", "jia.liu");
 				put("age", 29);
-				put("logtime", "1432020638.958");
+				put("logtime", "1432020599.157");
 
 			}
 		};
@@ -68,18 +68,13 @@ public class DoubleFilter implements Filter {
 		s = JinManager.jinjava.render(template, cc);
 		System.out.println(s);
 
-		template = "{{event[1].logtime|double}}";
+		template = "{{event[1].logtime|float}}";
+		s = JinManager.jinjava.render(template, cc);
+		System.out.println(s);
+		
+		template = "{{event[1].logtime|float|int}}";
 		s = JinManager.jinjava.render(template, cc);
 		System.out.println(s);
 
-		long st = System.currentTimeMillis();
-
-		for (int i = 0; i < 10000; i++) {
-
-			template = "{{event[1].logtime|double|int}}";
-			s = JinManager.jinjava.render(template, cc);
-			// System.out.println(s);
-		}
-		System.out.println(System.currentTimeMillis() - st);
 	}
 }
