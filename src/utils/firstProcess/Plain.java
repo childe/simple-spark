@@ -22,10 +22,6 @@ public class Plain implements PairFunction {
 		Object key = t._1;
 		String message = (String) t._2;
 
-		if (message == null) {
-			message = "";
-		}
-
 		HashMap<String, Object> event = new HashMap<String, Object>();
 		event.put("message", message);
 

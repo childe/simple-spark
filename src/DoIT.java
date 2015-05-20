@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 
 import utils.firstProcess.Json;
 import utils.firstProcess.Plain;
+import utils.firstProcess.RemoveNull;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Duration;
@@ -72,9 +73,9 @@ public class DoIT {
 							.createStream(jssc, zkQuorum, group, topicsMap);
 
 					if (codec.equalsIgnoreCase("json")) {
-						streams.put(streamID, a.mapToPair(new Json()));
+						streams.put(streamID, a.filter(new RemoveNull()).mapToPair(new Json()));
 					} else if (codec.equalsIgnoreCase("plain")) {
-						streams.put(streamID, a.mapToPair(new Plain()));
+						streams.put(streamID, a.filter(new RemoveNull()).mapToPair(new Plain()));
 					}
 
 				}

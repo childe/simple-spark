@@ -29,14 +29,6 @@ public class Json implements PairFunction {
 				}
 			};
 		}
-		
-		if (event == null) {
-			event = new HashMap<String, Object>() {
-				{
-					put("message", "");
-				}
-			};
-		}
 
 		return new Tuple2(key, event);
 	}
