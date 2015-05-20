@@ -44,14 +44,14 @@ public class Stat implements Function2 {
 		final int count1 = (int) (event1.containsKey(this.countkey) ? event1
 				.get(countkey) : 1);
 
-		float sum0 = 0;
-		float sum1 = 0;
+		double sum0 = 0;
+		double sum1 = 0;
 
 		if (event0.containsKey(this.sumkey)) {
 			sum0 = (float) event0.get(this.sumkey);
 		} else {
 			try {
-				sum0 = Float.parseFloat((String) event0.get(this.field));
+				sum0 = Double.parseDouble((String) event0.get(this.field));
 			} catch (Exception e) {
 
 			}
@@ -67,7 +67,7 @@ public class Stat implements Function2 {
 			}
 		}
 
-		final float sum = sum0 + sum1;
+		final double sum = sum0 + sum1;
 
 		return new HashMap<String, Object>() {
 			{
