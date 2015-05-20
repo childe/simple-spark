@@ -63,6 +63,14 @@ public class DoubleFilter implements Filter {
 
 		Context cc = new Context(JinManager.c, binding);
 		String template, s;
+		
+		template = "{{event[1].logtime|integer/10}}";
+		s = JinManager.jinjava.render(template, cc);
+		System.out.println(s);
+		
+		template = "{{event[1].logtime|integer/10  >= ''|nowtime/1000000}}";
+		s = JinManager.jinjava.render(template, cc);
+		System.out.println(s);
 
 		template = "{{event[1].logtime}}";
 		s = JinManager.jinjava.render(template, cc);
