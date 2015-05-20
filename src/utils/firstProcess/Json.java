@@ -17,6 +17,7 @@ public class Json implements PairFunction {
 		Tuple2 t = (Tuple2) arg0;
 		Object key = t._1;
 		final String message = (String) t._2;
+		
 
 		HashMap<String, Object> event = null;
 		try {
@@ -25,6 +26,14 @@ public class Json implements PairFunction {
 			event = new HashMap<String, Object>() {
 				{
 					put("message", message);
+				}
+			};
+		}
+		
+		if (event == null) {
+			event = new HashMap<String, Object>() {
+				{
+					put("message", "");
 				}
 			};
 		}
