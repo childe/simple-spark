@@ -22,7 +22,7 @@ public class FloorFilter implements Filter {
 	@Override
 	public Object filter(Object arg0, JinjavaInterpreter arg1, String... arg2) {
 		// TODO Auto-generated method stub
-		int a = (Integer) arg0;
+		long a = (long) arg0;
 		Object pre = null;
 		int current;
 		for (int i = 0; i < arg2.length; i++) {
