@@ -41,15 +41,15 @@ public class FloorFilter implements Filter {
 	public static void main(String[] args) {
 		FloorFilter f = new FloorFilter();
 
-		// Object a;
-		// a = f.filter(10, null, "5", "7", "20");
-		// System.out.println(a);
-		//
-		// a = f.filter(1, null, "5", "7", "20");
-		// System.out.println(a);
-		//
-		// a = f.filter(100, null, "5", "7", "20");
-		// System.out.println(a);
+		 Object a;
+		 a = f.filter(6, null, "5", "7", "20");
+		 System.out.println(a);
+		
+		 a = f.filter(1, null, "5", "7", "20");
+		 System.out.println(a);
+		
+		 a = f.filter(100, null, "5", "7", "20");
+		 System.out.println(a);
 
 		Map<String, Object> bindings = new HashMap<>();
 		bindings.put("name", "Jared");
@@ -59,22 +59,16 @@ public class FloorFilter implements Filter {
 
 		Context c = jinjava.getGlobalContext();
 		c.registerFilter(f);
-		String template = "Hello, {%if name is defined %} {{name}} {% endif %}, age is{{ age - age%10 }}";
-//		TokenParser t = new TokenParser(null, template);
-//		Node parsedTemplate = TreeParser.parseTree(t);
+		String template = "{{age|floor('10','20')}}";
+		// TokenParser t = new TokenParser(null, template);
+		// Node parsedTemplate = TreeParser.parseTree(t);
 
-		long s = System.currentTimeMillis();
-		for (int i = 0; i < 1; i++) {
-			Context cc = new Context(c, bindings);
-			JinjavaInterpreter interpreter = new JinjavaInterpreter(jinjava,
-					cc, null);
-			// Node parsedTemplate = interpreter.parse(template);
-			String ss = interpreter.render(template);
-			System.out.println(ss);
-			
-			
-		}
+		Context cc = new Context(c, bindings);
+		JinjavaInterpreter interpreter = new JinjavaInterpreter(jinjava, cc,
+				null);
+		// Node parsedTemplate = interpreter.parse(template);
+		String ss = interpreter.render(template);
+		System.out.println(ss);
 
-		System.out.println(System.currentTimeMillis() - s);
 	}
 }
