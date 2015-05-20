@@ -48,7 +48,7 @@ public class Stat implements Function2 {
 		double sum1 = 0;
 
 		if (event0.containsKey(this.sumkey)) {
-			sum0 = (float) event0.get(this.sumkey);
+			sum0 = (double) event0.get(this.sumkey);
 		} else {
 			try {
 				sum0 = Double.parseDouble((String) event0.get(this.field));
@@ -58,10 +58,10 @@ public class Stat implements Function2 {
 		}
 
 		if (event1.containsKey(this.sumkey)) {
-			sum1 = (float) event1.get(this.sumkey);
+			sum1 = (double) event1.get(this.sumkey);
 		} else {
 			try {
-				sum1 = Float.parseFloat((String) event1.get(this.field));
+				sum1 = Double.parseDouble((String) event1.get(this.field));
 			} catch (Exception e) {
 
 			}
