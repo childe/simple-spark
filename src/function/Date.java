@@ -82,6 +82,7 @@ public class Date implements PairFunction {
 
 			if (success == false) {
 				// TODO: log
+				event.put("@timestamp", 0);
 			}
 		}
 
