@@ -88,6 +88,11 @@ public class Filter implements Function {
 		template = "{{event[1].gender|default(event[1].age)}}";
 		s = jinjava.render(template, cc);
 		System.out.println(s);
+		
+		template = "{{!event[1].time is defined and event[1].age > 20}}";
+		s = jinjava.render(template, cc);
+		System.out.println(s);
+
 
 	}
 }
