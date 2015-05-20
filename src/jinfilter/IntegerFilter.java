@@ -22,6 +22,9 @@ public class IntegerFilter implements Filter {
 	@Override
 	public Object filter(Object arg0, JinjavaInterpreter arg1, String... arg2) {
 		// TODO Auto-generated method stub
+		if (arg0 == null) {
+			return 0;
+		}
 		Class c = arg0.getClass();
 		if (c == String.class) {
 			try {
@@ -80,28 +83,32 @@ public class IntegerFilter implements Filter {
 		Context cc = new Context(JinManager.c, binding);
 		String template, s;
 
-		template = "{{(event[1].longtime|integer/1000)|integer}}";
+		template = "{{event[1].miss|integer>1000}}";
 		s = JinManager.jinjava.render(template, cc);
 		System.out.println(s);
-
-		 long st = System.currentTimeMillis();
-		
-		 for (int i = 0; i < 10000; i++) {
-		
-		 template = "{{event[1].logtime|double|int}}";
-		 s = JinManager.jinjava.render(template, cc);
-		 // System.out.println(s);
-		 }
-		 System.out.println(System.currentTimeMillis() - st);
-		
-		 st = System.currentTimeMillis();
-		
-		 for (int i = 0; i < 10000; i++) {
-		
-		 template = "{{event[1].logtime|integer}}";
-		 s = JinManager.jinjava.render(template, cc);
-		 // System.out.println(s);
-		 }
-		 System.out.println(System.currentTimeMillis() - st);
+		//
+		// template = "{{(event[1].longtime|integer/1000)|integer}}";
+		// s = JinManager.jinjava.render(template, cc);
+		// System.out.println(s);
+		//
+		// long st = System.currentTimeMillis();
+		//
+		// for (int i = 0; i < 10000; i++) {
+		//
+		// template = "{{event[1].logtime|double|int}}";
+		// s = JinManager.jinjava.render(template, cc);
+		// // System.out.println(s);
+		// }
+		// System.out.println(System.currentTimeMillis() - st);
+		//
+		// st = System.currentTimeMillis();
+		//
+		// for (int i = 0; i < 10000; i++) {
+		//
+		// template = "{{event[1].logtime|integer}}";
+		// s = JinManager.jinjava.render(template, cc);
+		// // System.out.println(s);
+		// }
+		// System.out.println(System.currentTimeMillis() - st);
 	}
 }
