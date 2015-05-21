@@ -8,8 +8,6 @@
                 <attribute name="Main-Class" value="DoIT"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
-            <fileset dir="/Users/liujia/Projects/ctrip/spark/spark-java/bin"/>
-            <!--zipfileset excludes="META-INF/*.SF" src="/Users/liujia/Projects/ctrip/spark/spark-java/lib/spark-streaming-kafka-assembly_2.10-1.3.0.jar"/-->
             <zipfileset excludes="META-INF/*.SF" src="lib/json-simple-1.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="lib/jinjava-1.0.9.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/commons-lang3-3.3.2.jar"/>
