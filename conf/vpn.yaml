@@ -1,0 +1,90 @@
+app_name: vpn
+master: "spark://10.1.1.100:7077"
+batching_interval: 20
+spark_conf:
+    spark.cores.max: "2"
+    spark.executor.memory: 512m
+    spark.ui.port: "8100"
+input:
+  kafka:
+    vpn:
+        zookeeper: 10.8.84.74:2181
+        groupID: spark
+        topics:
+            logstash-vpnauth: 1
+
+function:
+  - Filter:
+      id: array
+      from: vpn
+      if: 
+        - "{{event[1].type == 'array' and 'failed' in event[1].msg}}"
+  - jinjafilter:
+      id: juniper
+      from: vpn
+      if: 
+        - "{{event[1].type == 'juniper' and 'failed' in event[1].msg }}"
+  - Grok:
+      id: arraygrok
+      from: array
+      transformation: map
+      match:
+          - ['message', '.*?(?P<divice_ip>\S+)\s+id=(?P<id>\S+)\s+time="(?P<arraylogtime>.*?)"\s+fw=(?P<fw>\S+)\s+pri=(?P<pri>\d+)\s+vpn=(?P<vpn>\S+)\s+user=(?P<user>\S+)\s+src=(?P<sip>\S+)\s+sport=(?P<sport>\S+)\s+type=\S+\s+msg="(?P<msg>.*)"']
+      remove_fields: ['message']
+  - Grok:
+      id: junipergrok
+      from: juniper
+      transformation: map
+      match:
+          - ['message', '(?P<logtime>\S+\s+\S+\s+\S+)\s+(?P<device_ip>\S+)\s+.*\[(?P<sip>\S+)\]\s+(?P<user>\S+)\(\S+\)\[\] - (?P<msg>.*)']
+      remove_fields: ['message']
+  - Date:
+      from: arraygrok
+      id: arrayDate
+      -
+        src: arraylogtime
+        format: "%Y-%m-%d %H:%M:%S"
+  - Date:
+      from: junipergrok
+      id: juniperDate
+      -
+        src: juniperlogtime
+        format: "%Y %b %d %H:%M:%S"
+  - union:
+      id: unioned
+      from: juniperDate
+      right: ["arrayDate"]
+  - Setkey:
+      id: setkey
+      from: unioned
+      key: ["{{event[1].sip}}", "{{event[0][@timestamp] - event[1][@timestamp]%60000}}"]
+  - Count:
+      id: firstcount
+      from: window
+  - window:
+      id: window
+      from: firstcount
+      transforma_args: [120,60]
+  - Count:
+      id: count
+      from: window
+  - Filter:
+      id: trim_window
+      from: count
+      transformation: filter
+      if: 
+        - "{{event[1]['count']|default(1) >= 10}}"
+        - "{{event[0][1]|integer + 120000 >= ''|nowtime}}"
+        - "{{event[0][1]|integer + 60000 <= ''|nowtime}}"
+  - Mail:
+      from: trim_window
+      from: 'jia.liu@ctrip.com'
+      to_list: ['chenxiaofeng@ctrip.com','nzhu@ctrip.com','jia.liu@ctrip.com']
+      subject: '[应用报警] VPN auth failed monitor CRITICAL报警'
+      format: 
+        - "报警时间: {{event[0][1]}}"
+        - "报警级别: CRITICAL"
+        - "报警信息: 1分钟内单个SIP的认证失败用户{{event[1]['count']}}个"
+        - "{{event[0][0]}} - {{event[1]['count']|default(1)}}"
+        - "面板地址:"
+        - "http://es.ops.ctripcorp.com/#/dashboard/elasticsearch/vpnauth"

@@ -23,6 +23,7 @@
             <zipfileset excludes="META-INF/*.SF" src="vender/juel-spi-2.2.7.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/yamlbeans-1.06.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/snakeyaml-1.10-android.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/elasticsearch-1.5.1.jar"/>
         </jar>
     </target>
 </project>
