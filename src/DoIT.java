@@ -73,20 +73,25 @@ public class DoIT {
 							.createStream(jssc, zkQuorum, group, topicsMap);
 
 					if (codec.equalsIgnoreCase("json")) {
-						streams.put(streamID, a.filter(new RemoveNull()).mapToPair(new Json()));
+						streams.put(streamID, a.filter(new RemoveNull())
+								.mapToPair(new Json()));
 					} else if (codec.equalsIgnoreCase("plain")) {
-						streams.put(streamID, a.filter(new RemoveNull()).mapToPair(new Plain()));
+						streams.put(streamID, a.filter(new RemoveNull())
+								.mapToPair(new Plain()));
 					}
 
 				}
 			}
 		}
-
 	}
 
 	private static void buildFunction(HashMap<String, Object> streams,
 			ArrayList<Object> filterConfig) throws Exception {
 		System.out.println(filterConfig);
+
+		if (filterConfig == null) {
+			return;
+		}
 
 		for (Object object : filterConfig) {
 
