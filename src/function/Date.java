@@ -90,10 +90,10 @@ public class Date implements PairFunction {
 	}
 
 	public static void main(String[] args) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM/dd HH:mm:ss.SSS");
 		java.util.Date date;
 		try {
-			date = sdf.parse("2015/05/06 10:31:20.527");
+			date = sdf.parse("201505/06 10:31:20.527");
 			System.out.println(date.toLocaleString());
 			System.out.println(date.getTime());
 		} catch (ParseException e) {
