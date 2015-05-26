@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jinmanager.JinManager;
 
@@ -12,7 +14,6 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.VoidFunction;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.transport.TransportClient;
@@ -23,8 +24,6 @@ import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.json.simple.JSONValue;
-
-import akka.event.Logging;
 
 import com.hubspot.jinjava.interpret.Context;
 
@@ -40,12 +39,15 @@ public class ES implements Function2 {
 
 	private Object bulkProcessor = null, esclient = null;
 
+	private final static Logger LOGGER = Logger.getLogger(ES.class.getName());
+
 	/**
 	 * @param conf
 	 * @throws Exception
 	 */
 	public ES(HashMap conf) throws Exception {
-		System.out.println(conf);
+
+		LOGGER.log(Level.INFO, conf.toString());
 
 		this.conf = conf;
 
@@ -112,14 +114,9 @@ public class ES implements Function2 {
 									BulkResponse arg2) {
 								// TODO Auto-generated method stub
 								if (arg2.hasFailures()) {
-									System.out.println(arg2
-											.buildFailureMessage());
-									System.out.println(arg1);
-								} else {
-									System.out.println(arg1.contextSize()
-											+ " request");
-									System.out.println(arg2.contextSize()
-											+ " response");
+									LOGGER.log(Level.SEVERE,
+											arg2.buildFailureMessage());
+									LOGGER.log(Level.SEVERE, arg1.toString());
 								}
 							}
 
@@ -127,8 +124,8 @@ public class ES implements Function2 {
 							public void afterBulk(long arg0, BulkRequest arg1,
 									Throwable arg2) {
 								// TODO Auto-generated method stub
-								System.out.println(arg2.getMessage());
-								System.out.println(arg1);
+								LOGGER.log(Level.SEVERE, arg2.getMessage());
+								LOGGER.log(Level.SEVERE, arg1.toString());
 							}
 
 							@Override
@@ -179,25 +176,6 @@ public class ES implements Function2 {
 					((BulkProcessor) bulkProcessor).add(new IndexRequest(
 							_index, _type).source(JSONValue.toJSONString(e._2)));
 				}
-				//
-				// int try_count = 0;
-				// while (try_count < tryTime) {
-				// try {
-				// BulkResponse bulkResponse = bulkRequest.execute()
-				// .actionGet();
-				// if (bulkResponse.hasFailures()) {
-				// throw new Exception(bulkResponse
-				// .buildFailureMessage());
-				// }
-				// return;
-				// } catch (Exception e) {
-				// System.out.println(e.getMessage());
-				// try_count++;
-				// Thread.sleep(interval * 1000);
-				// }
-				// }
-				//
-				// System.out.println("could not send");
 
 				return;
 			}
