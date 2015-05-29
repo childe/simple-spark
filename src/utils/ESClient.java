@@ -1,17 +1,10 @@
-package output;
+package utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import jinmanager.JinManager;
-
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.VoidFunction;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -23,43 +16,22 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
-import org.json.simple.JSONValue;
 
-import com.hubspot.jinjava.interpret.Context;
 
-import scala.Tuple2;
-import utils.ESClient;
+public class ESClient {
 
-public class ES implements Function2 {
-	static public final String defaultTransformation = "foreachRDD";
+	private final static Logger LOGGER = Logger.getLogger(ESClient.class
+			.getName());
 
-	private final Map conf;
+	Map conf;
 
-	private final String index;
-	private final String indexType;
-
+	private static ESClient esClient = null;
 	private Object bulkProcessor = null, esclient = null;
 
-	private final static Logger LOGGER = Logger.getLogger(ES.class.getName());
-
-	/**
-	 * @param conf
-	 * @throws Exception
-	 */
-	public ES(HashMap conf) throws Exception {
-		System.out.println("~~~~~~~~~~~~~~~~~");
-
-		LOGGER.log(Level.INFO, conf.toString());
-
+	private ESClient(Map conf) {
 		this.conf = conf;
 
-		this.index = (String) conf.get("index");
-
-		if (conf.containsKey("index_type")) {
-			this.indexType = (String) conf.get("index_type");
-		} else {
-			this.indexType = "logs";
-		}
+		initESClient();
 	}
 
 	private void initESClient() {
@@ -142,57 +114,18 @@ public class ES implements Function2 {
 				.setConcurrentRequests(concurrentRequests).build();
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public Object call(Object arg0, Object arg1) throws Exception {
-		JavaPairRDD rdd = (JavaPairRDD) arg0;
-
-		rdd.foreachPartition(new VoidFunction<Iterator>() {
-			@Override
-			public void call(Iterator iter) throws Exception {
-
-				// initESClient();
-
-				while (iter.hasNext()) {
-					final Tuple2 e = (Tuple2) iter.next();
-
-					if (e._2 == null) {
-						continue;
-					}
-
-					final ArrayList event = new ArrayList() {
-						{
-							add(e._1);
-							add(e._2);
-						}
-					};
-
-					HashMap binding = new HashMap() {
-						{
-							put("event", event);
-						}
-					};
-
-					Context cc = new Context(JinManager.c, binding);
-
-					String _index = JinManager.jinjava.render(index, cc);
-					String _type = JinManager.jinjava.render(indexType, cc);
-
-					// System.out.println(e);
-
-					ESClient.getInstance(conf).add(_index, _type,
-							JSONValue.toJSONString(e._2));
-
-					// either use client#prepare, or use Requests# to directly
-					// build index/delete requests
-					// ((BulkProcessor) bulkProcessor).add(new IndexRequest(
-					// _index, _type).source(JSONValue.toJSONString(e._2)));
-				}
-
-				return;
+	public static ESClient getInstance(Map conf) {
+		if (esClient == null) {
+			synchronized (ESClient.class) {
+				esClient = new ESClient(conf);
 			}
+		}
 
-		});
-		return null;
+		return esClient;
+	}
+
+	public void add(String index, String type, String source) {
+		((BulkProcessor) bulkProcessor).add(new IndexRequest(index, type)
+				.source(source));
 	}
 }
