@@ -47,8 +47,6 @@ public class ES implements Function2 {
 	 * @throws Exception
 	 */
 	public ES(HashMap conf) throws Exception {
-		System.out.println("~~~~~~~~~~~~~~~~~");
-
 		LOGGER.log(Level.INFO, conf.toString());
 
 		this.conf = conf;
@@ -177,8 +175,6 @@ public class ES implements Function2 {
 
 					String _index = JinManager.jinjava.render(index, cc);
 					String _type = JinManager.jinjava.render(indexType, cc);
-
-					// System.out.println(e);
 
 					ESClient.getInstance(conf).add(_index, _type,
 							JSONValue.toJSONString(e._2));
