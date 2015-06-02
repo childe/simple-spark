@@ -29,7 +29,6 @@ public class Joni implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
 
-	private ArrayList<Tuple2> matches = null;
 	private Map conf;
 
 	@SuppressWarnings("unchecked")
@@ -38,37 +37,6 @@ public class Joni implements PairFunction {
 		this.conf = conf;
 	}
 
-	private ArrayList<String> getNamedGroupCandidates(String regex) {
-		ArrayList<String> namedGroups = new ArrayList<String>();
-
-		java.util.regex.Matcher m = Pattern.compile(
-				"\\(\\?<([a-zA-Z][_-a-zA-Z0-9]*)>").matcher(regex);
-
-		while (m.find()) {
-			namedGroups.add(m.group(1));
-		}
-
-		return namedGroups;
-	}
-
-	private ArrayList prepareMatchConf(ArrayList<HashMap> originalMatches) {
-		ArrayList<Tuple2> matches = new ArrayList<Tuple2>();
-		for (HashMap match : originalMatches) {
-			String src = (String) match.keySet().iterator().next();
-
-			final ArrayList<Tuple2> regexAndGroupnames = new ArrayList<Tuple2>();
-
-			for (String m : (ArrayList<String>) match.get(src)) {
-				Regex regex = new Regex(m.getBytes(), 0, m.getBytes().length,
-						Option.NONE, UTF8Encoding.INSTANCE);
-				regexAndGroupnames.add(new Tuple2(regex, this
-						.getNamedGroupCandidates(m)));
-			}
-
-			matches.add(new Tuple2(src, regexAndGroupnames));
-		}
-		return matches;
-	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Tuple2 call(Object arg0) {
