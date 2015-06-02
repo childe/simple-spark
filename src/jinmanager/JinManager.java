@@ -1,5 +1,6 @@
 package jinmanager;
 
+import jinfilter.DateFormat;
 import jinfilter.DoubleFilter;
 import jinfilter.FloorFilter;
 import jinfilter.IntegerFilter;
@@ -17,5 +18,6 @@ public class JinManager {
 		c.registerFilter(new NowtimeFilter());
 		c.registerFilter(new DoubleFilter());
 		c.registerFilter(new IntegerFilter());
+		c.registerFilter(new DateFormat());
     }
 }
