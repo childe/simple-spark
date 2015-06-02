@@ -1,6 +1,7 @@
 package function;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,7 +22,6 @@ import org.joni.NameEntry;
 import org.joni.Option;
 import org.joni.Regex;
 import org.joni.Region;
-
 
 public class Joni implements PairFunction {
 
@@ -116,6 +116,21 @@ public class Joni implements PairFunction {
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
 		boolean success = this.match(event);
+
+		if (success == false) {
+			LOGGER.log(Level.WARNING, "grok failed." + event.toString());
+
+			if (!event.containsKey("tags")) {
+				event.put("tags",
+						new ArrayList<String>(Arrays.asList("grokfail")));
+			} else {
+				Object tags = event.get("tags");
+				if (tags.getClass() == ArrayList.class
+						&& ((ArrayList) tags).indexOf("grokfail") == -1) {
+					((ArrayList) tags).add("grokfail");
+				}
+			}
+		}
 
 		return new Tuple2(originKey, event);
 
