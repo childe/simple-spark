@@ -22,11 +22,10 @@ import org.joni.Option;
 import org.joni.Regex;
 import org.joni.Region;
 
-import output.ES;
 
 public class Joni implements PairFunction {
 
-	private final static Logger LOGGER = Logger.getLogger(ES.class.getName());
+	private final static Logger LOGGER = Logger.getLogger(Joni.class.getName());
 
 	static public final String defaultTransformation = "mapToPair";
 
