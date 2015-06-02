@@ -1,4 +1,4 @@
-package utils;
+package utils.es;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -23,12 +23,12 @@ public class ESClient {
 	private final static Logger LOGGER = Logger.getLogger(ESClient.class
 			.getName());
 
-	Map conf;
+	private Map conf;
 
 	private static ESClient esClient = null;
 	private Object bulkProcessor = null, esclient = null;
 
-	private ESClient(Map conf) {
+	public ESClient(Map conf) {
 		this.conf = conf;
 
 		initESClient();
@@ -112,16 +112,6 @@ public class ESClient {
 				.setBulkSize(new ByteSizeValue(bulkSize, ByteSizeUnit.MB))
 				.setFlushInterval(TimeValue.timeValueSeconds(flushInterval))
 				.setConcurrentRequests(concurrentRequests).build();
-	}
-
-	public static ESClient getInstance(Map conf) {
-		if (esClient == null) {
-			synchronized (ESClient.class) {
-				esClient = new ESClient(conf);
-			}
-		}
-
-		return esClient;
 	}
 
 	public void add(String index, String type, String source) {

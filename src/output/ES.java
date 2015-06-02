@@ -15,7 +15,6 @@ import org.apache.spark.api.java.function.VoidFunction;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -28,7 +27,8 @@ import org.json.simple.JSONValue;
 import com.hubspot.jinjava.interpret.Context;
 
 import scala.Tuple2;
-import utils.ESClient;
+
+import utils.es.ESManager;
 
 public class ES implements Function2 {
 	static public final String defaultTransformation = "foreachRDD";
@@ -176,8 +176,8 @@ public class ES implements Function2 {
 					String _index = JinManager.jinjava.render(index, cc);
 					String _type = JinManager.jinjava.render(indexType, cc);
 
-					ESClient.getInstance(conf).add(_index, _type,
-							JSONValue.toJSONString(e._2));
+					ESManager.getInstance((String) conf.get("id"), conf).add(
+							_index, _type, JSONValue.toJSONString(e._2));
 
 					// either use client#prepare, or use Requests# to directly
 					// build index/delete requests
