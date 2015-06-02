@@ -15,7 +15,6 @@ import com.hubspot.jinjava.interpret.Context;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.lib.filter.Filter;
 
-
 public class DateFormat implements Filter {
 
 	@Override
@@ -26,13 +25,12 @@ public class DateFormat implements Filter {
 
 	@Override
 	public Object filter(Object arg0, JinjavaInterpreter arg1, String... arg2) {
-		// TODO Auto-generated method stub
-		
-			DateTimeFormatter f = DateTimeFormat.forPattern(arg2[0]).withZone(org.joda.time.DateTimeZone.UTC);
-			System.out.println(f);
-			Instant instant = new Instant(Long.parseLong((String) arg0));
-			return instant.toDateTime().toString(f);
-		
+
+		DateTimeFormatter f = DateTimeFormat.forPattern(arg2[0]).withZone(
+				org.joda.time.DateTimeZone.UTC);
+		Instant instant = new Instant(Long.parseLong((String) arg0));
+		return instant.toDateTime().toString(f);
+
 	}
 
 	/**
@@ -62,7 +60,7 @@ public class DateFormat implements Filter {
 				put("event", new ArrayList(Arrays.asList(key, value)));
 			}
 		};
-		
+
 		Context cc = new Context(JinManager.c, binding);
 		String template, s;
 

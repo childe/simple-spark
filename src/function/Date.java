@@ -1,26 +1,31 @@
 package function;
 
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import scala.Tuple2;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import utils.date.*;
 
 public class Date implements PairFunction {
+	private final static Logger LOGGER = Logger.getLogger(Date.class.getName());
+
 	ArrayList<HashMap<String, Object>> convert;
 
 	static public final String defaultTransformation = "mapToPair";
 
-	public Date() {
-	}
-
 	@SuppressWarnings("unchecked")
 	public Date(HashMap<String, Object> conf) {
-		System.out.println(conf);
+		LOGGER.log(Level.FINER, conf.toString());
 
 		this.convert = new ArrayList<HashMap<String, Object>>();
 		for (HashMap<String, Object> object : (ArrayList<HashMap<String, Object>>) conf
@@ -31,19 +36,25 @@ public class Date implements PairFunction {
 
 			// prepare SimpleDateFormat arrays
 
-			ArrayList<SimpleDateFormat> realformats = new ArrayList<SimpleDateFormat>();
-			@SuppressWarnings("unchecked")
+			ArrayList<Parser> parsers = new ArrayList<Parser>();
+			
 			ArrayList<String> formats = (ArrayList<String>) object
 					.get("format");
 			for (String format : formats) {
-				realformats.add(new SimpleDateFormat(format));
+				// if (format.equalsIgnoreCase("UNIX")) {
+				// parsers.add(new UnixParser());
+				// } else if (format.equalsIgnoreCase("UNIXMS")) {
+				// parsers.add(new UnixMSParser());
+				// } else {
+				// parsers.add(new FormatParser(format,(String)object.get("timezone")));
+				// }
 			}
-			object.put("formats", realformats);
+			object.put("parsers", parsers);
 
 			this.convert.add(object);
 		}
 
-		System.out.println(this.convert);
+		LOGGER.log(Level.FINER, this.convert.toString());
 	}
 
 	@Override
@@ -65,24 +76,30 @@ public class Date implements PairFunction {
 
 			boolean success = false;
 			@SuppressWarnings("unchecked")
-			ArrayList<SimpleDateFormat> formats = (ArrayList<SimpleDateFormat>) object
-					.get("formats");
-			for (SimpleDateFormat format : formats) {
-				java.util.Date date;
+			ArrayList<Parser> parsers = (ArrayList<Parser>) object
+					.get("parsers");
+			for (Parser parser : parsers) {
 				try {
-					date = format.parse(stringDate);
-					event.put(target, date.getTime());
+					event.put(target, parser.parse(stringDate));
 					success = true;
 					break;
 				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					// e.printStackTrace();
 				}
 			}
 
 			if (success == false) {
-				// TODO: log
-				event.put("@timestamp", 0);
+				LOGGER.log(Level.WARNING, "date failed." + event.toString());
+
+				if (!event.containsKey("tags")) {
+					event.put("tags",
+							new ArrayList<String>(Arrays.asList("datefail")));
+				} else {
+					Object tags = event.get("tags");
+					if (tags.getClass() == ArrayList.class
+							&& ((ArrayList) tags).indexOf("datefail") == -1) {
+						((ArrayList) tags).add("datefail");
+					}
+				}
 			}
 		}
 
@@ -90,26 +107,9 @@ public class Date implements PairFunction {
 	}
 
 	public static void main(String[] args) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM/dd HH:mm:ss.SSS");
-		java.util.Date date;
-		try {
-			date = sdf.parse("201505/06 10:31:20.527");
-			System.out.println(date.toLocaleString());
-			System.out.println(date.getTime());
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		try {
-			date = sdf.parse("2015-05-07 09:47:23.495");
-			System.out.println(date.toLocaleString());
-			System.out.println(date.getTime());
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		DateTimeFormatter formatter = DateTimeFormat
+				.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
+		long time = formatter.parseMillis("2015/05/06 10:31:20.527");
+		System.out.println(time);
 	}
 }
