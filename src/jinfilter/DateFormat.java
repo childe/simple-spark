@@ -10,25 +10,36 @@ import jinmanager.JinManager;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import com.hubspot.jinjava.interpret.Context;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.lib.filter.Filter;
 
+/*
+ * input could be Unix time stamp in MS unit or ISO8601 string
+ */
 public class DateFormat implements Filter {
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
 		return "dateformat";
 	}
 
 	@Override
 	public Object filter(Object arg0, JinjavaInterpreter arg1, String... arg2) {
+		long time = System.currentTimeMillis();
+		try {
+			time = Long.parseLong((String) arg0);
+		} catch (Exception e) {
+			// adjust to logstash which has @timestamp filed in ISO8601 format
+			time = ISODateTimeFormat.dateTimeParser()
+					.parseMillis((String) arg0);
+		}
 
 		DateTimeFormatter f = DateTimeFormat.forPattern(arg2[0]).withZone(
 				org.joda.time.DateTimeZone.UTC);
-		Instant instant = new Instant(Long.parseLong((String) arg0));
+		Instant instant = new Instant(time);
 		return instant.toDateTime().toString(f);
 
 	}
