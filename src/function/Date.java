@@ -37,17 +37,18 @@ public class Date implements PairFunction {
 			// prepare SimpleDateFormat arrays
 
 			ArrayList<Parser> parsers = new ArrayList<Parser>();
-			
+
 			ArrayList<String> formats = (ArrayList<String>) object
 					.get("format");
 			for (String format : formats) {
-				// if (format.equalsIgnoreCase("UNIX")) {
-				// parsers.add(new UnixParser());
-				// } else if (format.equalsIgnoreCase("UNIXMS")) {
-				// parsers.add(new UnixMSParser());
-				// } else {
-				// parsers.add(new FormatParser(format,(String)object.get("timezone")));
-				// }
+				if (format.equalsIgnoreCase("UNIX")) {
+					parsers.add(new UnixParser());
+				} else if (format.equalsIgnoreCase("UNIXMS")) {
+					parsers.add(new UnixMSParser());
+				} else {
+					parsers.add(new FormatParser(format, (String) object
+							.get("timezone"), (String) object.get("locale")));
+				}
 			}
 			object.put("parsers", parsers);
 
@@ -83,7 +84,7 @@ public class Date implements PairFunction {
 					event.put(target, parser.parse(stringDate));
 					success = true;
 					break;
-				} catch (ParseException e) {
+				} catch (Exception e) {
 				}
 			}
 
