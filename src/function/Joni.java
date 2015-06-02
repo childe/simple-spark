@@ -4,15 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
-import utils.joni.JoniManager;
-import utils.joni.JoniRegex;
 
 import org.jcodings.specific.UTF8Encoding;
 import org.joni.Matcher;
@@ -29,28 +30,95 @@ public class Joni implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
 
+	private ArrayList<Tuple2> matches = null;
 	private Map conf;
 
 	@SuppressWarnings("unchecked")
 	public Joni(HashMap<String, Object> conf) {
 		System.out.println(conf);
+
 		this.conf = conf;
+
 	}
 
+	private ArrayList<String> getNamedGroupCandidates(String regex) {
+		ArrayList<String> namedGroups = new ArrayList<String>();
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+		java.util.regex.Matcher m = Pattern.compile(
+				"\\(\\?<([a-zA-Z][_-a-zA-Z0-9]*)>").matcher(regex);
+
+		while (m.find()) {
+			namedGroups.add(m.group(1));
+		}
+
+		return namedGroups;
+	}
+
+	private ArrayList prepareMatchConf(ArrayList<HashMap> originalMatches) {
+		ArrayList<Tuple2> matches = new ArrayList<Tuple2>();
+		for (HashMap match : originalMatches) {
+			String src = (String) match.keySet().iterator().next();
+
+			final ArrayList<Tuple2> regexAndGroupnames = new ArrayList<Tuple2>();
+
+			for (String m : (ArrayList<String>) match.get(src)) {
+				Regex regex = new Regex(m.getBytes(), 0, m.getBytes().length,
+						Option.NONE, UTF8Encoding.INSTANCE);
+				regexAndGroupnames.add(new Tuple2(regex, this
+						.getNamedGroupCandidates(m)));
+			}
+
+			matches.add(new Tuple2(src, regexAndGroupnames));
+		}
+		return matches;
+	}
+
+	private boolean match(Map event) {
+		try {
+			for (Tuple2 match : this.matches) {
+				String src = (String) match._1;
+				if (!event.containsKey(src)) {
+					continue;
+				}
+
+				String input = ((String) event.get(src));
+
+				ArrayList<Tuple2> regexAndGroupnames = (ArrayList<Tuple2>) match._2;
+				for (Tuple2 rAndgn : regexAndGroupnames) {
+					Regex regex = (Regex) rAndgn._1;
+
+					Matcher matcher = regex.matcher(input.getBytes());
+					int result = matcher.search(0, input.getBytes().length,
+							Option.DEFAULT);
+
+					if (result != -1) {
+						Region region = matcher.getEagerRegion();
+						ArrayList<String> groupnames = (ArrayList<String>) rAndgn._2;
+						for (int i = 0; i < region.numRegs; i++) {
+							event.put(groupnames.get(i), input.substring(
+									region.beg[i], region.end[i]));
+						}
+						return true;
+					}
+				}
+
+			}
+
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, e.getLocalizedMessage());
+			return false;
+		}
+
+		return false;
+	}
+
 	public Tuple2 call(Object arg0) {
-
 		Tuple2 t = (Tuple2) arg0;
-		
 		Object originKey = t._1;
-		
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
-		
-		JoniRegex joniRegex = JoniManager.getInstance((String) this.conf.get("id"), this.conf);
-		
-		joniRegex.match(event);
-		
+
+		boolean success = this.match(event);
+
 		return new Tuple2(originKey, event);
 
 	}
