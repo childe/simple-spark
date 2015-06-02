@@ -101,7 +101,6 @@ public class Joni implements PairFunction {
 						return true;
 					}
 				}
-
 			}
 
 		} catch (Exception e) {
