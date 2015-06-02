@@ -1,8 +1,5 @@
 package utils.date;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -16,9 +13,11 @@ public class FormatParser implements Parser {
 
 		if (timezone != null) {
 			this.formatter.withZone(DateTimeZone.forID(timezone));
+		} else {
+			this.formatter.withOffsetParsed();
 		}
 
-		//TODO
+		// TODO
 		// if (locale != null) {
 		// this.formatter.withLocale(locale);
 		// }
@@ -26,15 +25,15 @@ public class FormatParser implements Parser {
 	}
 
 	@Override
-	public long parse(String input) throws ParseException {
+	public long parse(String input) {
 		// TODO Auto-generated method stub
 		return this.formatter.parseMillis(input);
 
 	}
 
-	public static void main(String[] args) throws ParseException {
+	public static void main(String[] args) {
 		String input = "2015/05/06 10:31:20.427";
-		FormatParser p = new FormatParser("yyyy/MM/dd HH:mm:ss.SSS",null,null);
+		FormatParser p = new FormatParser("yyyy/MM/dd HH:mm:ss.SSS", null, null);
 		System.out.println(p.parse(input));
 	}
 }
