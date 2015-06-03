@@ -4,6 +4,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
+import utils.postProcess.PostProcess;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,10 +34,14 @@ public class Grok implements PairFunction {
 	final private ArrayList<Tuple2> matches;
 
 	private final String tagOnFailure;
+	
+	private Map conf;
 
 	@SuppressWarnings("unchecked")
 	public Grok(HashMap<String, Object> conf) {
 		System.out.println(conf);
+		
+		this.conf = conf;
 
 		ArrayList<HashMap> originalMatches = (ArrayList<HashMap>) conf
 				.get("match");
@@ -147,6 +152,8 @@ public class Grok implements PairFunction {
 					((ArrayList) tags).add(this.tagOnFailure);
 				}
 			}
+		}else{
+			PostProcess.process(event, this.conf);
 		}
 
 		return new Tuple2(originKey, event);
