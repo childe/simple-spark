@@ -8,20 +8,27 @@ import scala.Tuple2;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Grok implements PairFunction {
 
+	private final static Logger LOGGER = Logger.getLogger(Grok.class.getName());
+
 	static public final String defaultTransformation = "mapToPair";
 
 	final private ArrayList<Tuple2> matches;
+
+	private final String tagOnFailure;
 
 	@SuppressWarnings("unchecked")
 	public Grok(HashMap<String, Object> conf) {
@@ -30,6 +37,12 @@ public class Grok implements PairFunction {
 		ArrayList<HashMap> originalMatches = (ArrayList<HashMap>) conf
 				.get("match");
 		this.matches = this.prepareMatchConf(originalMatches);
+
+		if (conf.containsKey("tag_on_failure")) {
+			this.tagOnFailure = (String) conf.get("tag_on_failure");
+		} else {
+			this.tagOnFailure = "grokfail";
+		}
 	}
 
 	private Set<String> getNamedGroupCandidates(String regex) {
@@ -63,14 +76,13 @@ public class Grok implements PairFunction {
 		return matches;
 	}
 
-	public Tuple2 call(Object arg0) {
-		// TODO Auto-generated method stub
-		Tuple2 t = (Tuple2) arg0;
-		Object originKey = t._1;
-		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
-
+	private boolean match(HashMap event) {
+		boolean result = true;
 		try {
 			for (Tuple2 match : this.matches) {
+
+				boolean thisMatch = false;
+
 				String src = (String) match._1;
 				if (!event.containsKey(src)) {
 					continue;
@@ -87,20 +99,50 @@ public class Grok implements PairFunction {
 						continue;
 					}
 
+					thisMatch = true;
+
 					Set<String> groupnames = (Set) pAndgn._2;
 					for (String groupname : groupnames) {
 						event.put(groupname, (String) m.group(groupname));
 					}
-
 					break;
+				}
+
+				if (thisMatch == false) {
+					result = false;
 				}
 
 			}
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return new Tuple2(originKey, event);
+			LOGGER.log(Level.WARNING, e.getLocalizedMessage());
+			result = false;
+		}
+
+		return result;
+	}
+
+	public Tuple2 call(Object arg0) {
+		// TODO Auto-generated method stub
+		Tuple2 t = (Tuple2) arg0;
+		Object originKey = t._1;
+		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
+
+		boolean success = this.match(event);
+
+		if (success == false) {
+			LOGGER.log(Level.WARNING, "grok failed." + event.toString());
+
+			if (!event.containsKey("tags")) {
+				event.put("tags",
+						new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
+			} else {
+				Object tags = event.get("tags");
+				if (tags.getClass() == ArrayList.class
+						&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
+					((ArrayList) tags).add(this.tagOnFailure);
+				}
+			}
 		}
 
 		return new Tuple2(originKey, event);
