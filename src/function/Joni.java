@@ -30,6 +30,7 @@ public class Joni implements PairFunction {
 	static public final String defaultTransformation = "mapToPair";
 
 	private ArrayList<Tuple2> matches = null;
+	private final String tagOnFailure;
 	private Map conf;
 
 	@SuppressWarnings("unchecked")
@@ -37,8 +38,15 @@ public class Joni implements PairFunction {
 		System.out.println(conf);
 
 		this.conf = conf;
-		
-		this.matches = this.prepareMatchConf((ArrayList<HashMap>) conf.get("match"));
+
+		if (conf.containsKey("tag_on_failure")) {
+			this.tagOnFailure = (String) conf.get("tag_on_failure");
+		} else {
+			this.tagOnFailure = "grokfail";
+		}
+
+		this.matches = this.prepareMatchConf((ArrayList<HashMap>) conf
+				.get("match"));
 
 	}
 
@@ -74,9 +82,13 @@ public class Joni implements PairFunction {
 		return matches;
 	}
 
+	@SuppressWarnings("unchecked")
 	private boolean match(Map event) {
+		boolean rst = true;
 		try {
 			for (Tuple2 match : this.matches) {
+				boolean thisMatch = false;
+
 				String src = (String) match._1;
 				if (!event.containsKey(src)) {
 					continue;
@@ -93,23 +105,29 @@ public class Joni implements PairFunction {
 							Option.DEFAULT);
 
 					if (result != -1) {
+						thisMatch = true;
 						Region region = matcher.getEagerRegion();
 						ArrayList<String> groupnames = (ArrayList<String>) rAndgn._2;
 						for (int i = 0; i < region.numRegs; i++) {
 							event.put(groupnames.get(i), input.substring(
 									region.beg[i], region.end[i]));
 						}
-						return true;
+
+						break;
 					}
+				}
+
+				if (thisMatch == false) {
+					rst = false;
 				}
 			}
 
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, e.getLocalizedMessage());
-			return false;
+			rst = false;
 		}
 
-		return false;
+		return rst;
 	}
 
 	public Tuple2 call(Object arg0) {
@@ -124,12 +142,12 @@ public class Joni implements PairFunction {
 
 			if (!event.containsKey("tags")) {
 				event.put("tags",
-						new ArrayList<String>(Arrays.asList("grokfail")));
+						new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
 			} else {
 				Object tags = event.get("tags");
 				if (tags.getClass() == ArrayList.class
-						&& ((ArrayList) tags).indexOf("grokfail") == -1) {
-					((ArrayList) tags).add("grokfail");
+						&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
+					((ArrayList) tags).add(this.tagOnFailure);
 				}
 			}
 		}
