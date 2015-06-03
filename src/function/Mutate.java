@@ -2,6 +2,8 @@ package function;
 
 import org.apache.spark.api.java.function.Function;
 
+import utils.postProcess.PostProcess;
+
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.interpret.Context;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
@@ -152,6 +154,8 @@ public class Mutate implements Function {
 		if (this.conf.containsKey("strip")) {
 			strip(event, (Map<String, String>) this.conf.get("number"));
 		}
+
+		PostProcess.process(event, conf);
 
 		return event;
 	}
