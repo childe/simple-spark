@@ -3,6 +3,7 @@ package function;
 import org.apache.spark.api.java.function.Function;
 
 import com.hubspot.jinjava.Jinjava;
+import com.hubspot.jinjava.interpret.Context;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
 import com.hubspot.jinjava.tree.Node;
 
@@ -10,46 +11,116 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import jinmanager.JinManager;
 
 public class Mutate implements Function {
 
 	static public final String defaultTransformation = "map";
 
-	private void rename(HashMap<String, Object> event) {
+	private Map conf;
+
+	public Mutate(Map conf) {
+		this.conf = conf;
+	}
+
+	private void rename(Map<String, Object> event, Map<String, String> fields) {
+		Iterator<Entry<String, String>> it = fields.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, String> entry = it.next();
+
+			String oldname = entry.getKey();
+			String newname = entry.getValue();
+
+			if (event.containsKey(oldname)) {
+				event.put(newname, event.remove(oldname));
+			}
+		}
 	};
 
-	private void update(HashMap<String, Object> event) {
+	private void update(Map<String, Object> event) {
 	};
 
-	private void replace(HashMap<String, Object> event) {
+	private void replace(Map<String, Object> event) {
 	};
 
-	private void convert(HashMap<String, Object> event) {
+	private void number(Map<String, Object> event, Map<String, String> fields) {
+		Iterator<Entry<String, String>> it = fields.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, String> entry = it.next();
+
+			String field = entry.getKey();
+			String valuetype = entry.getValue();
+
+			if (event.containsKey(field)) {
+				event.put(field,
+						Double.parseDouble((String) event.remove(field)));
+			}
+		}
 	};
 
-	private void gsub(HashMap<String, Object> event) {
+	private void gsub(Map<String, Object> event,
+			Map<String, List<String>> fields) {
+		Iterator<Entry<String, List<String>>> it = fields.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, List<String>> entry = it.next();
+
+			String field = entry.getKey();
+			String regex = entry.getValue().get(0);
+			String replacement = entry.getValue().get(1);
+
+			if (event.containsKey(field)) {
+				event.put(field, ((String) event.remove(field)).replaceAll(
+						regex, replacement));
+			}
+		}
 	};
 
-	private void uppercase(HashMap<String, Object> event) {
+	private void uppercase(Map<String, Object> event, List<String> fields) {
+		for (String field : fields) {
+			if (event.containsKey(field)) {
+				event.put(field, ((String) event.remove(field)).toUpperCase());
+			}
+		}
 	};
 
-	private void lowercase(HashMap<String, Object> event) {
+	private void lowercase(Map<String, Object> event, List<String> fields) {
+		for (String field : fields) {
+			if (event.containsKey(field)) {
+				event.put(field, ((String) event.remove(field)).toLowerCase());
+			}
+		}
 	};
 
-	private void strip(HashMap<String, Object> event) {
+	private void strip(Map<String, Object> event, Map<String, String> fields) {
+		Iterator<Entry<String, String>> it = fields.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String, String> entry = it.next();
+
+			String field = entry.getKey();
+			String regex = entry.getValue();
+
+			if (event.containsKey(field)) {
+				event.put(field,
+						((String) event.remove(field)).replaceAll(regex, ""));
+			}
+		}
 	};
 
-	private void remove(HashMap<String, Object> event) {
+	private void remove(Map<String, Object> event) {
 	};
 
-	private void split(HashMap<String, Object> event) {
+	private void split(Map<String, Object> event) {
 	};
 
-	private void join(HashMap<String, Object> event) {
+	private void join(Map<String, Object> event) {
 	};
 
-	private void merge(HashMap<String, Object> event) {
+	private void merge(Map<String, Object> event) {
 	};
 
 	@Override
@@ -57,30 +128,32 @@ public class Mutate implements Function {
 		// TODO Auto-generated method stub
 		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
 
-		rename(event);
-		update(event);
-		replace(event);
-		convert(event);
-		gsub(event);
-		uppercase(event);
-		lowercase(event);
-		strip(event);
-		remove(event);
-		split(event);
-		join(event);
-		merge(event);
+		// update(event);
+		// replace(event);
+
+		// split(event);
+		// join(event);
+		// merge(event);
+		if (this.conf.containsKey("rename")) {
+			gsub(event, (Map<String, List<String>>) this.conf.get("rename"));
+		}
+		if (this.conf.containsKey("rename")) {
+			rename(event, (Map<String, String>) this.conf.get("rename"));
+		}
+		if (this.conf.containsKey("number")) {
+			number(event, (Map<String, String>) this.conf.get("number"));
+		}
+		if (this.conf.containsKey("uppercase")) {
+			uppercase(event, (List<String>) this.conf.get("uppercase"));
+		}
+		if (this.conf.containsKey("lowercase")) {
+			lowercase(event, (List<String>) this.conf.get("lowercase"));
+		}
+		if (this.conf.containsKey("strip")) {
+			strip(event, (Map<String, String>) this.conf.get("number"));
+		}
 
 		return event;
-	}
-
-	public void testFunc1(String a, int b) {
-		for (int i = 0; i < b; i++) {
-			System.out.println(a);
-		}
-	}
-
-	public void testFunc2() {
-		System.out.println("testFunc2");
 	}
 
 	public static void main(String[] args) {
