@@ -20,6 +20,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/*
+ * we could config more than one match in this function;
+ * same tagOnFailure applies to the event if one match fails.
+ */
 public class Grok implements PairFunction {
 
 	private final static Logger LOGGER = Logger.getLogger(Grok.class.getName());

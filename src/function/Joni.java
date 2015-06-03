@@ -23,6 +23,10 @@ import org.joni.Option;
 import org.joni.Regex;
 import org.joni.Region;
 
+/*
+ * we could config more than one match in this function;
+ * same tagOnFailure applies to the event if one match fails.
+ */
 public class Joni implements PairFunction {
 
 	private final static Logger LOGGER = Logger.getLogger(Joni.class.getName());
