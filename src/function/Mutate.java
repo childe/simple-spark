@@ -2,8 +2,10 @@ package function;
 
 import org.apache.spark.api.java.function.Function;
 
+import scala.Tuple2;
 import utils.postProcess.PostProcess;
 
+import com.google.protobuf.WireFormat.FieldType;
 import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.interpret.Context;
 import com.hubspot.jinjava.interpret.JinjavaInterpreter;
@@ -12,6 +14,7 @@ import com.hubspot.jinjava.tree.Node;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,7 +25,7 @@ import jinmanager.JinManager;
 
 public class Mutate implements Function {
 
-	static public final String defaultTransformation = "map";
+	static public final String defaultTransformation = "mapToPair";
 
 	private Map conf;
 
@@ -50,18 +53,28 @@ public class Mutate implements Function {
 	private void replace(Map<String, Object> event) {
 	};
 
-	private void number(Map<String, Object> event, Map<String, String> fields) {
+	private void convert(Map<String, Object> event, Map<String, String> fields) {
 		Iterator<Entry<String, String>> it = fields.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry<String, String> entry = it.next();
 
 			String field = entry.getKey();
-			String valuetype = entry.getValue();
+			String filedtype = entry.getValue();
 
-			if (event.containsKey(field)) {
-				event.put(field,
-						Double.parseDouble((String) event.remove(field)));
+			Object newvalue = null;
+			if (!event.containsKey(field)) {
+				return;
 			}
+			if (filedtype.equalsIgnoreCase("integer")) {
+				newvalue = Integer.parseInt((String) event.get(field));
+			} else if (filedtype.equalsIgnoreCase("float")) {
+				newvalue = Float.parseFloat((String) event.get(field));
+			} else if (filedtype.equalsIgnoreCase("string")) {
+				newvalue = event.get(field).toString();
+			}else{
+				newvalue = event.get(field);
+			}
+			event.put(field, newvalue);
 		}
 	};
 
@@ -98,17 +111,11 @@ public class Mutate implements Function {
 		}
 	};
 
-	private void strip(Map<String, Object> event, Map<String, String> fields) {
-		Iterator<Entry<String, String>> it = fields.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<String, String> entry = it.next();
+	private void strip(Map<String, Object> event, List<String> fields) {
 
-			String field = entry.getKey();
-			String regex = entry.getValue();
-
+		for (String field : fields) {
 			if (event.containsKey(field)) {
-				event.put(field,
-						((String) event.remove(field)).replaceAll(regex, ""));
+				event.put(field, ((String) event.remove(field)).trim());
 			}
 		}
 	};
@@ -127,8 +134,9 @@ public class Mutate implements Function {
 
 	@Override
 	public Object call(Object arg0) throws Exception {
-		// TODO Auto-generated method stub
-		HashMap<String, Object> event = (HashMap<String, Object>) arg0;
+		Tuple2 t = (Tuple2) arg0;
+		Object originKey = t._1;
+		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
 		// update(event);
 		// replace(event);
@@ -136,14 +144,15 @@ public class Mutate implements Function {
 		// split(event);
 		// join(event);
 		// merge(event);
-		if (this.conf.containsKey("rename")) {
-			gsub(event, (Map<String, List<String>>) this.conf.get("rename"));
+
+		if (this.conf.containsKey("gsub")) {
+			gsub(event, (Map<String, List<String>>) this.conf.get("gsub"));
 		}
 		if (this.conf.containsKey("rename")) {
 			rename(event, (Map<String, String>) this.conf.get("rename"));
 		}
-		if (this.conf.containsKey("number")) {
-			number(event, (Map<String, String>) this.conf.get("number"));
+		if (this.conf.containsKey("convert")) {
+			convert(event, (Map<String, String>) this.conf.get("convert"));
 		}
 		if (this.conf.containsKey("uppercase")) {
 			uppercase(event, (List<String>) this.conf.get("uppercase"));
@@ -152,94 +161,53 @@ public class Mutate implements Function {
 			lowercase(event, (List<String>) this.conf.get("lowercase"));
 		}
 		if (this.conf.containsKey("strip")) {
-			strip(event, (Map<String, String>) this.conf.get("number"));
+			strip(event, (List<String>) this.conf.get("strip"));
 		}
 
 		PostProcess.process(event, conf);
 
-		return event;
+		return new Tuple2(originKey, event);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
-		// test getField
+		Map conf = new HashMap();
 
-		String a = null;
-		try {
-			a = (String) Class.forName("function.Mutate")
-					.getField("defaultTransformation").get(null);
-		} catch (IllegalArgumentException | IllegalAccessException
-				| NoSuchFieldException | SecurityException
-				| ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		System.out.println(a);
+		conf.put("lowercase", new ArrayList(Arrays.asList("domain")));
+		conf.put("uppercase", new ArrayList(Arrays.asList("url")));
+		conf.put("rename", new HashMap() {
+			{
+				put("r", "refer");
+			}
+		});
+		conf.put("strip", new ArrayList(Arrays.asList("username")));
+		conf.put("gsub", new HashMap() {
+			{
+				put("cookie", new ArrayList(Arrays.asList("password", "X")));
+			}
+		});
+		conf.put("convert", new HashMap() {
+			{
+				put("timetaken", "xx");
+			}
+		});
 
-		// test getMethod with uncertain parameters
+		Mutate mutate = new Mutate(conf);
 
-		ArrayList<Class> parameters = new ArrayList<Class>();
-		Class[] p = {};
-		parameters.add(String.class);
-		parameters.add(int.class);
-		p = parameters.toArray(p);
-		System.out.println(p);
+		Object originKey = null;
+		Tuple2 event = new Tuple2(originKey, new HashMap() {
+			{
+				put("domain", "www.Google.com");
+				put("url", "/Service/info.html");
+				put("r", "http://www.baidu.com");
+				put("timetaken", "10");
+				put("username", "  abc ");
+				put("cookie", "password=123");
+			}
+		});
 
-		Class[] p2 = new Class[] { String.class, int.class };
-		System.out.println(p2);
+		Tuple2 rst = (Tuple2) mutate.call(event);
 
-		try {
-			Method m = Class.forName("function.Mutate").getMethod("testFunc1",
-					p);
-
-			m.invoke(Class.forName("function.Mutate").newInstance(), "ab", 10);
-
-		} catch (IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | InstantiationException
-				| NoSuchMethodException | SecurityException
-				| ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// test getMethod with void parameter
-
-		try {
-			p = new Class[] {};
-			Method m = Class.forName("function.Mutate").getMethod("testFunc2",
-					p);
-
-			m.invoke(Class.forName("function.Mutate").newInstance());
-
-		} catch (IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException | InstantiationException
-				| NoSuchMethodException | SecurityException
-				| ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		long s = System.currentTimeMillis();
-
-		Jinjava jinjava = new Jinjava();
-
-		Map<String, Object> context = new HashMap<>();
-		context.put("name", "Jared");
-		String template = "Hello, {% if name is defined %} {{name}} {% else %} world {% endif %}";
-
-		for (int i = 0; i < 1; i++) {
-
-			jinjava.renderForResult(template, context);
-
-		}
-		System.out.println(System.currentTimeMillis() - s);
-
-		template = "{{event[\"@timestamp\"]}}";
-		context = new HashMap<>();
-		HashMap event = new HashMap<>();
-		event.put("@timestamp", 100000000);
-		context.put("event", event);
-		String rst = jinjava.render(template, context);
 		System.out.println(rst);
 
 	}
