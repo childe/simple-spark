@@ -37,6 +37,8 @@ public class Joni implements PairFunction {
 		System.out.println(conf);
 
 		this.conf = conf;
+		
+		this.matches = this.prepareMatchConf((ArrayList<HashMap>) conf.get("match"));
 
 	}
 
