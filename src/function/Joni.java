@@ -15,6 +15,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
+import utils.postProcess.PostProcess;
 
 import org.jcodings.specific.UTF8Encoding;
 import org.joni.Matcher;
@@ -154,6 +155,8 @@ public class Joni implements PairFunction {
 					((ArrayList) tags).add(this.tagOnFailure);
 				}
 			}
+		} else {
+			PostProcess.process(event, this.conf);
 		}
 
 		return new Tuple2(originKey, event);
