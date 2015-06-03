@@ -26,9 +26,7 @@ public class FormatParser implements Parser {
 
 	@Override
 	public long parse(String input) {
-		// TODO Auto-generated method stub
 		return this.formatter.parseMillis(input);
-
 	}
 
 	public static void main(String[] args) {
