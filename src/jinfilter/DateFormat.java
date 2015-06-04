@@ -30,7 +30,7 @@ public class DateFormat implements Filter {
 	public Object filter(Object arg0, JinjavaInterpreter arg1, String... arg2) {
 		long time = System.currentTimeMillis();
 		try {
-			time = Long.parseLong((String) arg0);
+			time = (long) arg0;
 		} catch (Exception e) {
 			// adjust to logstash which has @timestamp filed in ISO8601 format
 			time = ISODateTimeFormat.dateTimeParser()
