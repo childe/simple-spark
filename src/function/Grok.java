@@ -4,6 +4,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
+import scala.Tuple3;
 import utils.postProcess.PostProcess;
 
 import java.text.ParseException;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,16 +33,16 @@ public class Grok implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
 
-	final private ArrayList<Tuple2> matches;
+	final private List<Tuple3> matches;
 
 	private final String tagOnFailure;
-	
+
 	private Map conf;
 
 	@SuppressWarnings("unchecked")
 	public Grok(HashMap<String, Object> conf) {
 		System.out.println(conf);
-		
+
 		this.conf = conf;
 
 		ArrayList<HashMap> originalMatches = (ArrayList<HashMap>) conf
@@ -67,38 +69,38 @@ public class Grok implements PairFunction {
 		return namedGroups;
 	}
 
-	private ArrayList prepareMatchConf(ArrayList<HashMap> originalMatches) {
-		ArrayList<Tuple2> matches = new ArrayList<Tuple2>();
-		for (HashMap match : originalMatches) {
-			String src = (String) match.keySet().iterator().next();
+	private List prepareMatchConf(ArrayList<HashMap> originalMatches) {
+		ArrayList<Tuple3> matches = new ArrayList<Tuple3>();
+		for (HashMap matchconf : originalMatches) {
+			String src = (String) matchconf.keySet().iterator().next();
 
 			final ArrayList<Tuple2> patternAndGroupnames = new ArrayList<Tuple2>();
 
-			for (String m : (ArrayList<String>) match.get(src)) {
+			for (String m : (ArrayList<String>) matchconf.get(src)) {
 				Pattern p = Pattern.compile(m);
 				Set<String> groupnames = this.getNamedGroupCandidates(m);
 				patternAndGroupnames.add(new Tuple2(p, groupnames));
 			}
 
-			matches.add(new Tuple2(src, patternAndGroupnames));
+			matches.add(new Tuple3(src, patternAndGroupnames, matchconf));
 		}
 		return matches;
 	}
 
-	private boolean match(HashMap event) {
-		boolean result = true;
-		try {
-			for (Tuple2 match : this.matches) {
+	private void match(HashMap event) {
 
-				boolean thisMatch = false;
+		for (Tuple3 match : this.matches) {
 
-				String src = (String) match._1;
-				if (!event.containsKey(src)) {
-					continue;
-				}
+			String src = (String) match._1();
+			if (!event.containsKey(src)) {
+				continue;
+			}
+
+			boolean success = false;
+			try {
 				String input = (String) event.get(src);
 
-				ArrayList<Tuple2> pAndGns = (ArrayList<Tuple2>) match._2;
+				ArrayList<Tuple2> pAndGns = (ArrayList<Tuple2>) match._2();
 				for (Tuple2 pAndgn : pAndGns) {
 					Pattern p = (Pattern) pAndgn._1;
 
@@ -108,7 +110,7 @@ public class Grok implements PairFunction {
 						continue;
 					}
 
-					thisMatch = true;
+					success = true;
 
 					Set<String> groupnames = (Set) pAndgn._2;
 					for (String groupname : groupnames) {
@@ -117,18 +119,31 @@ public class Grok implements PairFunction {
 					break;
 				}
 
-				if (thisMatch == false) {
-					result = false;
-				}
-
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, e.getLocalizedMessage());
+				success = false;
 			}
 
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, e.getLocalizedMessage());
-			result = false;
+			if (success == false) {
+				LOGGER.log(Level.WARNING, "grok failed." + event.toString());
+
+				if (!event.containsKey("tags")) {
+					event.put(
+							"tags",
+							new ArrayList<String>(Arrays
+									.asList(this.tagOnFailure)));
+				} else {
+					Object tags = event.get("tags");
+					if (tags.getClass() == ArrayList.class
+							&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
+						((ArrayList) tags).add(this.tagOnFailure);
+					}
+				}
+			} else {
+				PostProcess.process(event, (Map) match._3());
+			}
 		}
 
-		return result;
 	}
 
 	public Tuple2 call(Object arg0) {
@@ -137,24 +152,7 @@ public class Grok implements PairFunction {
 		Object originKey = t._1;
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
-		boolean success = this.match(event);
-
-		if (success == false) {
-			LOGGER.log(Level.WARNING, "grok failed." + event.toString());
-
-			if (!event.containsKey("tags")) {
-				event.put("tags",
-						new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
-			} else {
-				Object tags = event.get("tags");
-				if (tags.getClass() == ArrayList.class
-						&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
-					((ArrayList) tags).add(this.tagOnFailure);
-				}
-			}
-		}else{
-			PostProcess.process(event, this.conf);
-		}
+		this.match(event);
 
 		return new Tuple2(originKey, event);
 
