@@ -84,8 +84,6 @@ public class Date implements PairFunction {
 		Object originKey = t._1;
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
-		boolean result = true;
-
 		for (HashMap<String, Object> object : this.convert) {
 			String src = (String) object.get("src");
 			if (!event.containsKey(src)) {
@@ -110,28 +108,27 @@ public class Date implements PairFunction {
 				} catch (Exception e) {
 				}
 			}
-
+			
 			if (success == false) {
-				result = false;
-			}
-		}
+				LOGGER.log(Level.WARNING, "date failed." + event.toString());
 
-		if (result == false) {
-			LOGGER.log(Level.WARNING, "date failed." + event.toString());
-
-			if (!event.containsKey("tags")) {
-				event.put("tags",
-						new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
-			} else {
-				Object tags = event.get("tags");
-				if (tags.getClass() == ArrayList.class
-						&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
-					((ArrayList) tags).add(this.tagOnFailure);
+				if (!event.containsKey("tags")) {
+					event.put("tags",
+							new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
+				} else {
+					Object tags = event.get("tags");
+					if (tags.getClass() == ArrayList.class
+							&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
+						((ArrayList) tags).add(this.tagOnFailure);
+					}
 				}
+			} else {
+				PostProcess.process(event, object);
 			}
-		} else {
-			PostProcess.process(event, conf);
+
 		}
+
+
 
 		return new Tuple2(originKey, event);
 	}
