@@ -11,10 +11,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import utils.date.*;
+import utils.postProcess.PostProcess;
 
 public class Date implements PairFunction {
 	private final static Logger LOGGER = Logger.getLogger(Date.class.getName());
@@ -23,35 +26,51 @@ public class Date implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
 
+	private final String tagOnFailure;
+
+	private Map conf;
+
 	@SuppressWarnings("unchecked")
 	public Date(HashMap<String, Object> conf) {
 		LOGGER.log(Level.FINER, conf.toString());
 
+		this.conf = conf;
+
+		if (conf.containsKey("tag_on_failure")) {
+			this.tagOnFailure = (String) conf.get("tag_on_failure");
+		} else {
+			this.tagOnFailure = "datefail";
+		}
+
 		this.convert = new ArrayList<HashMap<String, Object>>();
 		for (HashMap<String, Object> object : (ArrayList<HashMap<String, Object>>) conf
 				.get("convert")) {
+
 			if (!object.containsKey("target")) {
 				object.put("target", "@timestamp");
+			}
+			if (!object.containsKey("locale")) {
+				object.put("locale", "en");
 			}
 
 			// prepare SimpleDateFormat arrays
 
-			ArrayList<Parser> parsers = new ArrayList<Parser>();
-
-			ArrayList<String> formats = (ArrayList<String>) object
-					.get("format");
-			for (String format : formats) {
-				if (format.equalsIgnoreCase("UNIX")) {
-					parsers.add(new UnixParser());
-				} else if (format.equalsIgnoreCase("UNIXMS")) {
-					parsers.add(new UnixMSParser());
-				} else {
-					parsers.add(new FormatParser(format, (String) object
-							.get("timezone"), (String) object.get("locale")));
-				}
-			}
-			object.put("parsers", parsers);
-
+			// ArrayList<Parser> parsers = new ArrayList<Parser>();
+			//
+			// ArrayList<String> formats = (ArrayList<String>) object
+			// .get("format");
+			// for (String format : formats) {
+			// if (format.equalsIgnoreCase("UNIX")) {
+			// parsers.add(new UnixParser());
+			// } else if (format.equalsIgnoreCase("UNIXMS")) {
+			// parsers.add(new UnixMSParser());
+			// } else {
+			// parsers.add(new FormatParser(format, (String) object
+			// .get("timezone"), (String) object.get("locale")));
+			// }
+			// }
+			// object.put("parsers", parsers);
+			//
 			this.convert.add(object);
 		}
 
@@ -65,6 +84,8 @@ public class Date implements PairFunction {
 		Object originKey = t._1;
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
+		boolean result = true;
+
 		for (HashMap<String, Object> object : this.convert) {
 			String src = (String) object.get("src");
 			if (!event.containsKey(src)) {
@@ -77,8 +98,10 @@ public class Date implements PairFunction {
 
 			boolean success = false;
 			@SuppressWarnings("unchecked")
-			ArrayList<Parser> parsers = (ArrayList<Parser>) object
-					.get("parsers");
+			// ArrayList<Parser> parsers = (ArrayList<Parser>) object
+			// .get("parsers");
+			List<Parser> parsers = ParserManager.getParsers(
+					String.valueOf(object.hashCode()), object);
 			for (Parser parser : parsers) {
 				try {
 					event.put(target, parser.parse(stringDate));
@@ -89,19 +112,25 @@ public class Date implements PairFunction {
 			}
 
 			if (success == false) {
-				LOGGER.log(Level.WARNING, "date failed." + event.toString());
+				result = false;
+			}
+		}
 
-				if (!event.containsKey("tags")) {
-					event.put("tags",
-							new ArrayList<String>(Arrays.asList("datefail")));
-				} else {
-					Object tags = event.get("tags");
-					if (tags.getClass() == ArrayList.class
-							&& ((ArrayList) tags).indexOf("datefail") == -1) {
-						((ArrayList) tags).add("datefail");
-					}
+		if (result == false) {
+			LOGGER.log(Level.WARNING, "date failed." + event.toString());
+
+			if (!event.containsKey("tags")) {
+				event.put("tags",
+						new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
+			} else {
+				Object tags = event.get("tags");
+				if (tags.getClass() == ArrayList.class
+						&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
+					((ArrayList) tags).add(this.tagOnFailure);
 				}
 			}
+		} else {
+			PostProcess.process(event, conf);
 		}
 
 		return new Tuple2(originKey, event);
