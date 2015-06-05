@@ -53,24 +53,6 @@ public class Date implements PairFunction {
 				object.put("locale", "en");
 			}
 
-			// prepare SimpleDateFormat arrays
-
-			// ArrayList<Parser> parsers = new ArrayList<Parser>();
-			//
-			// ArrayList<String> formats = (ArrayList<String>) object
-			// .get("format");
-			// for (String format : formats) {
-			// if (format.equalsIgnoreCase("UNIX")) {
-			// parsers.add(new UnixParser());
-			// } else if (format.equalsIgnoreCase("UNIXMS")) {
-			// parsers.add(new UnixMSParser());
-			// } else {
-			// parsers.add(new FormatParser(format, (String) object
-			// .get("timezone"), (String) object.get("locale")));
-			// }
-			// }
-			// object.put("parsers", parsers);
-			//
 			this.convert.add(object);
 		}
 
@@ -108,13 +90,15 @@ public class Date implements PairFunction {
 				} catch (Exception e) {
 				}
 			}
-			
+
 			if (success == false) {
 				LOGGER.log(Level.WARNING, "date failed." + event.toString());
 
 				if (!event.containsKey("tags")) {
-					event.put("tags",
-							new ArrayList<String>(Arrays.asList(this.tagOnFailure)));
+					event.put(
+							"tags",
+							new ArrayList<String>(Arrays
+									.asList(this.tagOnFailure)));
 				} else {
 					Object tags = event.get("tags");
 					if (tags.getClass() == ArrayList.class
@@ -127,8 +111,6 @@ public class Date implements PairFunction {
 			}
 
 		}
-
-
 
 		return new Tuple2(originKey, event);
 	}
