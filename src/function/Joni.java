@@ -17,6 +17,7 @@ import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
 import scala.Tuple3;
+import utils.joni.JoniManager;
 import utils.postProcess.PostProcess;
 
 import org.jcodings.specific.UTF8Encoding;
@@ -36,8 +37,7 @@ public class Joni implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
 
-	private List<Tuple3> matches = null;
-	private final String tagOnFailure;
+	private String id;
 	private Map conf;
 
 	@SuppressWarnings("unchecked")
@@ -45,110 +45,7 @@ public class Joni implements PairFunction {
 		System.out.println(conf);
 
 		this.conf = conf;
-
-		if (conf.containsKey("tag_on_failure")) {
-			this.tagOnFailure = (String) conf.get("tag_on_failure");
-		} else {
-			this.tagOnFailure = "grokfail";
-		}
-
-		this.matches = this.prepareMatchConf((ArrayList<HashMap>) conf
-				.get("match"));
-
-	}
-
-	private ArrayList<String> getNamedGroupCandidates(String regex) {
-		ArrayList<String> namedGroups = new ArrayList<String>();
-
-		java.util.regex.Matcher m = Pattern.compile(
-				"\\(\\?<([a-zA-Z][_-a-zA-Z0-9]*)>").matcher(regex);
-
-		while (m.find()) {
-			namedGroups.add(m.group(1));
-		}
-
-		return namedGroups;
-	}
-
-	private List prepareMatchConf(ArrayList<HashMap> originalMatches) {
-		List<Tuple3> matches = new ArrayList<Tuple3>();
-		for (HashMap matchconf : originalMatches) {
-			String src = (String) matchconf.keySet().iterator().next();
-
-			final ArrayList<Tuple2> regexAndGroupnames = new ArrayList<Tuple2>();
-
-			for (String m : (ArrayList<String>) matchconf.get(src)) {
-				Regex regex = new Regex(m.getBytes(), 0, m.getBytes().length,
-						Option.NONE, UTF8Encoding.INSTANCE);
-				regexAndGroupnames.add(new Tuple2(regex, this
-						.getNamedGroupCandidates(m)));
-			}
-
-			matches.add(new Tuple3(src, regexAndGroupnames, matchconf));
-		}
-		return matches;
-	}
-
-	@SuppressWarnings("unchecked")
-	private void match(Map event) {
-
-		for (Tuple3 match : this.matches) {
-
-			String src = (String) match._1();
-			if (!event.containsKey(src)) {
-				continue;
-			}
-
-			boolean success = false;
-			String input = ((String) event.get(src));
-
-			try {
-				ArrayList<Tuple2> regexAndGroupnames = (ArrayList<Tuple2>) match
-						._2();
-				for (Tuple2 rAndgn : regexAndGroupnames) {
-					Regex regex = (Regex) rAndgn._1;
-
-					Matcher matcher = regex.matcher(input.getBytes());
-					int result = matcher.search(0, input.getBytes().length,
-							Option.DEFAULT);
-
-					if (result != -1) {
-						success = true;
-						Region region = matcher.getEagerRegion();
-						ArrayList<String> groupnames = (ArrayList<String>) rAndgn._2;
-						for (int i = 0; i < region.numRegs; i++) {
-							event.put(groupnames.get(i), input.substring(
-									region.beg[i], region.end[i]));
-						}
-
-						break;
-					}
-				}
-
-			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, e.getLocalizedMessage());
-				success = false;
-			}
-
-			if (success == false) {
-				LOGGER.log(Level.WARNING, "grok failed." + event.toString());
-
-				if (!event.containsKey("tags")) {
-					event.put(
-							"tags",
-							new ArrayList<String>(Arrays
-									.asList(this.tagOnFailure)));
-				} else {
-					Object tags = event.get("tags");
-					if (tags.getClass() == ArrayList.class
-							&& ((ArrayList) tags).indexOf(this.tagOnFailure) == -1) {
-						((ArrayList) tags).add(this.tagOnFailure);
-					}
-				}
-			} else {
-				PostProcess.process(event, this.conf);
-			}
-		}
+		this.id = (String) conf.get("id");
 
 	}
 
@@ -157,74 +54,12 @@ public class Joni implements PairFunction {
 		Object originKey = t._1;
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
 
-		this.match(event);
+		JoniManager.getInstance((String) this.id, this.conf).process(event);
 
 		return new Tuple2(originKey, event);
 
 	}
 
 	public static void main(String[] args) {
-		String input = "[01/Jun/2015:16:48:28 +0800] 10.8.88.110 GET /index.php action=liancheng&from=%BB%A2%C1%D6&to=%C4%CF%B5%A4&format=json&user=tieyou&reqtime=1433148508&sign=9fff44495fbdf0c5239dcc9fdd9bc21b  80 - 10.8.109.237 10.8.56.48 HTTP/1.1 \"PHP/5.3.17\" \"-\" \"-\" ws.shopping.train.ctripcorp.com 200 94 0.026 0.026 127.0.0.1:9000 200";
-		//
-		String pattern = "\\[(?<logtime>\\S+\\s+\\S+)\\]\\s+(?<serverAddr>\\S+)\\s+(?<requestMethod>\\S+)\\s+(?<uri>\\S+)\\s+(?<queryString>\\S+)\\s+(?<serverPort>\\S+)\\s+(?<remoteUser>\\S+)\\s+(?<remoteAddr>\\S+)\\s+(?<forwarded>\\S+)\\s+(?<serverProtocol>\\S+)\\s+(?<UA>\\S+)\\s+(?<cookie>.+?)\\s+(?<referer>.+?)\\s+(?<csHost>\\S+)\\s+(?<statusCode>\\S+)\\s+(?<bodyBytesSent>\\S+)\\s+(?<requestTime>\\S+)\\s+(?<upstreamResponseTime>\\S+)\\s+(?<upstreamAddr>\\S+)\\s+(?<upstreamStatus>\\S+)";
-
-		TreeSet<String> namedGroups = new TreeSet<String>();
-
-		java.util.regex.Matcher m = Pattern.compile(
-				"\\(\\?<([a-zA-Z][a-zA-Z0-9]*)>").matcher(pattern);
-
-		while (m.find()) {
-			namedGroups.add(m.group(1));
-		}
-
-		Pattern p = Pattern.compile(pattern);
-
-		long s = System.currentTimeMillis();
-
-		for (int i = 0; i < 1000; i++) {
-			m = p.matcher(input);
-			m.find();
-			HashMap event = new HashMap();
-			for (String groupname : namedGroups) {
-				event.put(groupname, (String) m.group(groupname));
-			}
-		}
-
-		System.out.println(System.currentTimeMillis() - s);
-
-		pattern = "\\[(?<logtime>\\S+\\s+\\S+)\\]\\s+(?<server_addr>\\S+)\\s+(?<request_method>\\S+)\\s+(?<uri>\\S+)\\s+(?<queryString>\\S+)\\s+(?<serverPort>\\S+)\\s+(?<remoteUser>\\S+)\\s+(?<remoteAddr>\\S+)\\s+(?<forwarded>\\S+)\\s+(?<serverProtocol>\\S+)\\s+(?<UA>\\S+)\\s+(?<cookie>.+?)\\s+(?<referer>.+?)\\s+(?<csHost>\\S+)\\s+(?<statusCode>\\S+)\\s+(?<bodyBytesSent>\\S+)\\s+(?<requestTime>\\S+)\\s+(?<upstreamResponseTime>\\S+)\\s+(?<upstreamAddr>\\S+)\\s+(?<upstreamStatus>\\S+)";
-
-		Regex regex = new Regex(pattern.getBytes(), 0,
-				pattern.getBytes().length, Option.NONE, UTF8Encoding.INSTANCE);
-
-		s = System.currentTimeMillis();
-
-		for (int i = 0; i < 1000; i++) {
-			Matcher matcher = regex.matcher(input.getBytes());
-			int result = matcher.search(0, input.getBytes().length,
-					Option.DEFAULT);
-
-			if (result != -1) {
-				Region region = matcher.getEagerRegion();
-
-				HashMap event = new HashMap();
-
-				for (Iterator<NameEntry> entry = regex.namedBackrefIterator(); entry
-						.hasNext();) {
-					NameEntry e = entry.next();
-
-					int number = e.getBackRefs()[0];
-
-					int begin = region.beg[number];
-					int end = region.end[number];
-					event.put(pattern.substring(e.nameP, e.nameEnd),
-							input.substring(begin, end));
-
-				}
-				// System.out.println(event);
-			}
-		}
-
-		System.out.println(System.currentTimeMillis() - s);
 	}
 }
