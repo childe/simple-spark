@@ -6,26 +6,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
-import scala.Tuple3;
 import utils.joni.JoniManager;
-import utils.postProcess.PostProcess;
 
-import org.jcodings.specific.UTF8Encoding;
-import org.joni.Matcher;
-import org.joni.NameEntry;
-import org.joni.Option;
-import org.joni.Regex;
-import org.joni.Region;
 
 /*
  * we could config more than one match in this function;
