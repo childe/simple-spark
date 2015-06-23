@@ -125,7 +125,6 @@ public class Grok implements PairFunction {
 			}
 
 			if (success == false) {
-				LOGGER.log(Level.WARNING, "grok failed." + event.toString());
 
 				if (!event.containsKey("tags")) {
 					event.put(

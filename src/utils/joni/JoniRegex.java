@@ -117,7 +117,6 @@ public class JoniRegex {
 			}
 
 			if (success == false) {
-				LOGGER.log(Level.WARNING, "grok failed." + event.toString());
 
 				if (!event.containsKey("tags")) {
 					event.put(
