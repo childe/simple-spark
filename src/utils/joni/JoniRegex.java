@@ -48,7 +48,7 @@ public class JoniRegex {
 		ArrayList<String> namedGroups = new ArrayList<String>();
 
 		java.util.regex.Matcher m = Pattern.compile(
-				"\\(\\?<([a-zA-Z][_-a-zA-Z0-9]*)>").matcher(regex);
+				"\\(\\?<([a-zA-Z][-_a-zA-Z0-9]*)>").matcher(regex);
 
 		while (m.find()) {
 			namedGroups.add(m.group(1));
@@ -66,6 +66,10 @@ public class JoniRegex {
 			final ArrayList<Tuple2> regexAndGroupnames = new ArrayList<Tuple2>();
 
 			for (String m : (ArrayList<String>) matchconf.get(src)) {
+
+				LOGGER.log(Level.FINE, this.getNamedGroupCandidates(m)
+						.toString());
+
 				Regex regex = new Regex(m.getBytes(), 0, m.getBytes().length,
 						Option.NONE, UTF8Encoding.INSTANCE);
 				regexAndGroupnames.add(new Tuple2(regex, this
@@ -102,9 +106,12 @@ public class JoniRegex {
 						success = true;
 						Region region = matcher.getEagerRegion();
 						ArrayList<String> groupnames = (ArrayList<String>) rAndgn._2;
-						for (int i = 0; i < region.numRegs; i++) {
-							event.put(groupnames.get(i), input.substring(
-									region.beg[i], region.end[i]));
+						for (int i = 1; i < region.numRegs; i++) {
+							if (region.beg[i] != -1) {
+								event.put(groupnames.get(i - 1),
+										input.substring(region.beg[i],
+												region.end[i]));
+							}
 						}
 
 						break;
@@ -132,6 +139,44 @@ public class JoniRegex {
 				}
 			} else {
 				PostProcess.process(event, this.conf);
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+
+		String pattern, input;
+		pattern = "(?<logtime>\\S+\\s+\\S+)\\s+\"(?<domain>\\S+)\"\\s+(?<local_host>\\S+)\\s+(?<ip>\\S+)\\s+(?<method>\\S+)\\s+(?<uri>\\S+)\\s+(?<query_string>\\S+)\\s+(?<server_port>\\S+)\\s+(?<username>\\S+)\\s+(?<c_ip>\\S+)\\s+(?<real_ip>\\S+)\\s+"
+				+ "(?<cs_version>\\S+)\\s+\"(?<UA>.*)\"\\s+\"(-|(?<cs_Cookie_>.*?))\"\\s+\"(-|(?<cs_Referer_>.*?))\";?\\s+(?<sc_status>\\d+)\\s+(?<send_bytes>\\d+)\\s+(?<receive_bytes>\\d+)\\s+(?<time_taken>\\d+)";
+		input = "2015-06-24 14:40:59 \"ws.connect.qiche.ctripcorp.com\" ws.connect.qiche.ctripcorp.com 10.8.91.167 GET /index.php \"?param=/ticket/pullPay&website=&userAccount=zhifu5\" 80 - 10.8.91.169 - HTTP/1.1  \"PHP/5.3.17\" \"-\" \"-\" 200 316 152 5919";
+		Regex regex = new Regex(pattern.getBytes(), 0,
+				pattern.getBytes().length, Option.NONE, UTF8Encoding.INSTANCE);
+
+		java.util.regex.Matcher m = Pattern.compile(
+				"\\(\\?<([a-zA-Z][-_a-zA-Z0-9]*)>").matcher(pattern);
+
+		ArrayList groupnames = new ArrayList();
+		while (m.find()) {
+			groupnames.add(m.group(1));
+		}
+
+		Matcher matcher = regex.matcher(input.getBytes());
+
+		int result = matcher.search(0, input.getBytes().length, Option.DEFAULT);
+
+		if (result != -1) {
+			Region region = matcher.getEagerRegion();
+			System.out.println(groupnames.size());
+			System.out.println(region.beg.length);
+
+			for (int i = 1; i < region.numRegs; i++) {
+				System.out.println(groupnames.get(i - 1) + ": " + region.beg[i]
+						+ "," + region.end[i]);
+				if (region.beg[i] != -1) {
+
+					System.out.println(input.substring(region.beg[i],
+							region.end[i]));
+				}
 			}
 		}
 
