@@ -23,7 +23,7 @@ import java.util.Map.Entry;
 
 import jinmanager.JinManager;
 
-public class Mutate implements Function {
+public class Mutate implements PairFunction {
 
 	static public final String defaultTransformation = "mapToPair";
 
