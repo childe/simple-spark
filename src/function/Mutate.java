@@ -1,6 +1,7 @@
 package function;
 
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
 import utils.postProcess.PostProcess;
@@ -29,7 +30,7 @@ public class Mutate implements PairFunction {
 
 	private Map conf;
 
-	public Mutate(Map conf) {
+	public Mutate(HashMap conf) {
 		this.conf = conf;
 	}
 
@@ -133,7 +134,7 @@ public class Mutate implements PairFunction {
 	};
 
 	@Override
-	public Object call(Object arg0) throws Exception {
+	public Tuple2 call(Object arg0) throws Exception {
 		Tuple2 t = (Tuple2) arg0;
 		Object originKey = t._1;
 		HashMap<String, Object> event = (HashMap<String, Object>) t._2;
@@ -171,7 +172,7 @@ public class Mutate implements PairFunction {
 
 	public static void main(String[] args) throws Exception {
 
-		Map conf = new HashMap();
+		HashMap conf = new HashMap();
 
 		conf.put("lowercase", new ArrayList(Arrays.asList("domain")));
 		conf.put("uppercase", new ArrayList(Arrays.asList("url")));
