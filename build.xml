@@ -5,29 +5,46 @@
     <target name="create_run_jar">
         <jar destfile="build/SimpleSpark.jar" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="DoIT"/>
+                <attribute name="Main-Class" value="com.ctrip.ops.sysdev.DoIT"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="bin"/>
-            <zipfileset excludes="META-INF/*.SF" src="lib/json-simple-1.1.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="lib/jinjava-1.0.9.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/activation-1.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/antlr-runtime-3.5.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/asm-4.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/asm-commons-4.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/commons-lang3-3.3.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/elasticsearch-1.6.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/guava-17.0.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/jackson-annotations-2.3.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/javassist-3.18.2-GA.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/jcodings-1.0.12.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/jinjava-1.0.9.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/joda-time-2.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/joni-2.1.6.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/json-simple-1.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/jsoup-1.8.1.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/juel-api-2.2.6.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/juel-impl-2.2.7.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/juel-spi-2.2.7.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="vender/yamlbeans-1.06.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="vender/snakeyaml-1.10-android.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="vender/spark-streaming-kafka-assembly_2.10-1.3.0.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="vender/elasticsearch-1.5.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-analyzers-common-4.10.4.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="vender/lucene-core-4.10.4.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="vender/joni-2.1.6.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="vender/jcodings-1.0.12.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-grouping-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-highlighter-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-join-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-memory-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-misc-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-queries-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-queryparser-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-sandbox-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-spatial-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/lucene-suggest-4.10.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/mail-1.4.5.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/spark-assembly-1.3.0-hadoop2.4.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/spark-streaming-kafka-assembly_2.10-1.3.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/spatial4j-0.4.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/unused-1.0.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="vender/snakeyaml-1.10.jar"/>
         </jar>
     </target>
 </project>
