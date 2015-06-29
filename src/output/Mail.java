@@ -49,8 +49,10 @@ public class Mail implements Function2 {
 		System.out.println(conf);
 
 		this.mailhost = (String) conf.get("mailhost");
-		this.from = (String) conf.get("from");
-		this.toList = (String[]) conf.get("to_list");
+		this.from = (String) conf.get("from_addr");
+		ArrayList<String> t = (ArrayList<String>) conf.get("to_list");
+		this.toList = new String[]{};
+		t.toArray(this.toList);
 		this.subject = (String) conf.get("subject");
 
 		if (conf.containsKey("content_type"))
