@@ -1,4 +1,5 @@
 package com.ctrip.ops.sysdev;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -297,9 +298,13 @@ public class DoIT {
 		// spark conf
 
 		String appName = (String) topologyConf.get("app_name");
+
+		SparkConf sparkConf = new SparkConf().setAppName(appName);
+
 		String master = (String) topologyConf.get("master");
-		SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(
-				master);
+		if (master != null) {
+			sparkConf.setMaster(master);
+		}
 
 		HashMap<String, Object> spark_conf = (HashMap<String, Object>) topologyConf
 				.get("spark_conf");
