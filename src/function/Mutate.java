@@ -66,16 +66,21 @@ public class Mutate implements PairFunction {
 			if (!event.containsKey(field)) {
 				return;
 			}
-			if (filedtype.equalsIgnoreCase("integer")) {
-				newvalue = Integer.parseInt((String) event.get(field));
-			} else if (filedtype.equalsIgnoreCase("float")) {
-				newvalue = Float.parseFloat((String) event.get(field));
-			} else if (filedtype.equalsIgnoreCase("string")) {
-				newvalue = event.get(field).toString();
-			}else{
-				newvalue = event.get(field);
+
+			try {
+				if (filedtype.equalsIgnoreCase("integer")) {
+					newvalue = Integer.parseInt((String) event.get(field));
+				} else if (filedtype.equalsIgnoreCase("float")) {
+					newvalue = Float.parseFloat((String) event.get(field));
+				} else if (filedtype.equalsIgnoreCase("string")) {
+					newvalue = event.get(field).toString();
+				} else {
+					newvalue = event.get(field);
+				}
+				event.put(field, newvalue);
+			} catch (Exception e) {
+				// if could not convert , drop it
 			}
-			event.put(field, newvalue);
 		}
 	};
 
