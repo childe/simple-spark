@@ -17,7 +17,6 @@ import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 
-
 public class ESClient {
 
 	private final static Logger LOGGER = Logger.getLogger(ESClient.class
@@ -87,7 +86,6 @@ public class ESClient {
 							@Override
 							public void afterBulk(long arg0, BulkRequest arg1,
 									BulkResponse arg2) {
-								// TODO Auto-generated method stub
 								if (arg2.hasFailures()) {
 									LOGGER.log(Level.SEVERE,
 											arg2.buildFailureMessage());
@@ -98,9 +96,8 @@ public class ESClient {
 							@Override
 							public void afterBulk(long arg0, BulkRequest arg1,
 									Throwable arg2) {
-								// TODO Auto-generated method stub
-								LOGGER.log(Level.SEVERE, arg2.getMessage());
-								LOGGER.log(Level.SEVERE, arg1.toString());
+								LOGGER.log(Level.FINE, arg2.getMessage());
+								LOGGER.log(Level.FINE, arg1.toString());
 							}
 
 							@Override
