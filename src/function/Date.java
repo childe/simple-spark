@@ -92,7 +92,7 @@ public class Date implements PairFunction {
 			}
 
 			if (success == false) {
-				LOGGER.log(Level.WARNING, "date failed." + event.toString());
+				LOGGER.log(Level.FINE, "date failed." + event.toString());
 
 				if (!event.containsKey("tags")) {
 					event.put(
@@ -117,8 +117,8 @@ public class Date implements PairFunction {
 
 	public static void main(String[] args) {
 		DateTimeFormatter formatter = DateTimeFormat
-				.forPattern("YYYY/MM/dd HH:mm:ss.SSS");
-		long time = formatter.parseMillis("2015/05/06 10:31:20.527");
+				.forPattern("YYYY/MM/dd HH:mm:ss.SSSZ");
+		long time = formatter.parseMillis("2015/05/06 10:31:20.527+800");
 		System.out.println(time);
 	}
 }
