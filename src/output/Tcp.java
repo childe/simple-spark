@@ -49,6 +49,7 @@ public class Tcp implements Function2 {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object call(Object arg0, Object arg1) throws Exception {
 
@@ -56,6 +57,7 @@ public class Tcp implements Function2 {
 
 		rdd.foreachPartition(new VoidFunction<Iterator>() {
 
+			@SuppressWarnings("rawtypes")
 			@Override
 			public void call(Iterator iter) throws Exception {
 
