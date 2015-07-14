@@ -10,6 +10,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,11 @@ public class Date implements PairFunction {
 
 			String stringDate = (String) event.get(src);
 
+			if (object.containsKey("default_year")
+					&& (Boolean) object.get("default_year") == true) {
+				stringDate = Calendar.getInstance().get(Calendar.YEAR) + stringDate;
+			}
+
 			String target = (String) object.get("target");
 
 			boolean success = false;
@@ -116,9 +122,8 @@ public class Date implements PairFunction {
 	}
 
 	public static void main(String[] args) {
-		DateTimeFormatter formatter = DateTimeFormat
-				.forPattern("YYYY/MM/dd HH:mm:ss.SSSZ");
-		long time = formatter.parseMillis("2015/05/06 10:31:20.527+800");
-		System.out.println(time);
+
+		
+		System.out.println(2015+"1212");
 	}
 }
