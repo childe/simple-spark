@@ -51,8 +51,10 @@ public class Mail implements Function2 {
 		this.mailhost = (String) conf.get("mailhost");
 		this.from = (String) conf.get("from_addr");
 		ArrayList<String> t = (ArrayList<String>) conf.get("to_list");
-		this.toList = new String[]{};
-		t.toArray(this.toList);
+		String[] _toList = new String[] {};
+		_toList = t.toArray(_toList);
+		this.toList = _toList;
+		System.out.println(this.toList);
 		this.subject = (String) conf.get("subject");
 
 		if (conf.containsKey("content_type"))
@@ -60,7 +62,12 @@ public class Mail implements Function2 {
 		else
 			this.contentType = "text/plain";
 
-		this.auth = (Boolean) conf.get("auth");
+		if (conf.containsKey("auth")) {
+			this.auth = (Boolean) conf.get("auth");
+		} else {
+			this.auth = true;
+		}
+
 		this.sender = (String) conf.get("sender");
 		this.password = (String) conf.get("password");
 
@@ -96,7 +103,7 @@ public class Mail implements Function2 {
 		props.put("mail.smtp.auth", this.mailhost);
 
 		Session session = null;
-		if (this.auth) {
+		if (this.auth == true) {
 			Authenticator authenticator = new Authenticator() {
 				protected PasswordAuthentication getPasswordAuthentication() {
 					return new PasswordAuthentication(sender, password);
@@ -123,7 +130,7 @@ public class Mail implements Function2 {
 
 		Multipart multipart = new MimeMultipart();
 		MimeBodyPart body = new MimeBodyPart();
-		body.setContent(mailContent, this.contentType);
+		body.setText(mailContent);
 
 		multipart.addBodyPart(body);
 
@@ -132,6 +139,7 @@ public class Mail implements Function2 {
 		Transport.send(mimeMessage);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object call(Object arg0, Object arg1) {
 
@@ -186,5 +194,15 @@ public class Mail implements Function2 {
 
 		});
 		return null;
+	}
+
+	public static void main(String[] args) {
+		ArrayList<String> t = new ArrayList<String>();
+		t.add("1");
+		String[] _toList = new String[] {};
+		_toList = t.toArray(_toList);
+		final String[] toList;
+		toList = _toList;
+		System.out.println(toList[0]);
 	}
 }
